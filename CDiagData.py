@@ -60,24 +60,25 @@ class DiagData:
         self.asmStatusDict = {}
         startPosition = self.sourceData.find("AsmStart")
         endPosition = self.sourceData.find("AsmEnd")
-        asmStatusSource = self.sourceData[startPosition+9:endPosition-3]
+        asmStatusSource = self.sourceData[startPosition+8:endPosition-3]
+        
         asmStatusData = re.split(':|\\n',asmStatusSource)
+        if len(asmStatusData) > 1:
+            for x in range(0,int(len(asmStatusData)),3):
+                asmUsed = round(float(asmStatusData[x+2])/float(asmStatusData[x+1])*100,2)
+                if asmUsed < 10.00:
+                    asmWarn = 'Critical'
+                elif asmUsed < 20.00:
+                    asmWarn = 'Warning'
+                else:
+                    asmWarn = 'Normal'
 
-        for x in range(0,int(len(asmStatusData)),3):
-            asmUsed = round(float(asmStatusData[x+2])/float(asmStatusData[x+1])*100,2)
-            if asmUsed < 10.00:
-                asmWarn = 'Critical'
-            elif asmUsed < 20.00:
-                asmWarn = 'Warning'
-            else:
-                asmWarn = 'Normal'
-
-            self.asmStatusDict[asmStatusData[x]] = {
-                "Total" : asmStatusData[x+1],
-                "Usable"  : asmStatusData[x+2],
-                "FPCT"   : asmUsed,
-                "Level" : asmWarn
-            }
+                self.asmStatusDict[asmStatusData[x]] = {
+                    "Total" : asmStatusData[x+1],
+                    "Usable"  : asmStatusData[x+2],
+                    "FPCT"   : asmUsed,
+                    "Level" : asmWarn
+                }
 
     # BackupStatus
     def __backupStatus(self):
@@ -87,12 +88,12 @@ class DiagData:
         backupStatusSource = self.sourceData[startPosition+17:endPosition-3]
         backupStatusData = backupStatusSource.split()
 
-        for x in range(0,int(len(backupStatusData)/3+4),3):
-            self.backupStatusDict[backupStatusData[x]] = {
-                "BackupSize" : backupStatusData[x+1],
-                    "Status" : backupStatusData[x+2]
-            }
-
+        if len(backupStatusData) > 0:
+            for x in range(0,int(len(backupStatusData)/3+4),3):
+                self.backupStatusDict[backupStatusData[x]] = {
+                    "BackupSize" : backupStatusData[x+1],
+                        "Status" : backupStatusData[x+2]
+                }
 
     # AlertStatus
     def __alertStatus(self):
