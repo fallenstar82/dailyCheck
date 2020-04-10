@@ -60,8 +60,8 @@ class DiagData:
         self.asmStatusDict = {}
         startPosition = self.sourceData.find("AsmStart")
         endPosition = self.sourceData.find("AsmEnd")
-        asmStatusSource = self.sourceData[startPosition+8:endPosition-3]
-        
+        asmStatusSource = self.sourceData[startPosition+9:endPosition-3]
+
         asmStatusData = re.split(':|\\n',asmStatusSource)
         if len(asmStatusData) > 1:
             for x in range(0,int(len(asmStatusData)),3):
