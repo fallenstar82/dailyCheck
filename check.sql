@@ -105,7 +105,7 @@ begin
                               and start_time >= trunc(sysdate)-1
                            order by component, start_time)
                    ) loop
-   dbms_output.put_line(sgaopdata.rawdt)
+   dbms_output.put_line(sgaopdata.rawdt);
  end loop;
 end;
 /
