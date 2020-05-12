@@ -86,6 +86,7 @@ dbms_output.put_line(
 end loop;
 end;
 /
+prompt # TablespaceEnd
 prompt # SgaOperStart
 select rownum||'|'||datalist from (
 select component||'|'||start_time||'|'||end_time||'|'||oper_type||'|'|| oper_mode||'|'|| initial_size/1024/1024||'|'|| target_size/1024/1024||'|'|| final_size/1024/1024||'|'||status datalist
@@ -94,7 +95,6 @@ select component||'|'||start_time||'|'||end_time||'|'||oper_type||'|'|| oper_mod
    and start_time >= trunc(sysdate)-1
 order by component, start_time);
 prompt # SgaOperEnd
-prompt # TablespaceEnd
 prompt # AsmStart
 declare
  isAsmUse BINARY_INTEGER;
