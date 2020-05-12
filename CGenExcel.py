@@ -23,6 +23,7 @@ class GenExcel:
         self.__setNewSheet()
         self.__writeDBName()
         self.__memoryStatic()
+        self.__sgaOperStatic()
         self.__tablespaceStatic()
         self.__asmStatic()
         self.__backupStatic()
@@ -36,6 +37,7 @@ class GenExcel:
         self.asmData = dataSet['ASM']
         self.backupData = dataSet['BKDATA']
         self.alertData = dataSet['ALERT']
+        self.sgaOPData = dataSet['SGAOP']
 
     def __setNewSheet(self,):
         # 시트 새로 만들기
@@ -73,6 +75,74 @@ class GenExcel:
             setFont = self.workSheet["C"+str(self.rowPosition)]
             setFont.font = Font(name='Calibri',size=11, bold=True)
             setFont = self.workSheet["D"+str(self.rowPosition)]
+            setFont.font = Font(name='Calibri',size=11)
+
+    def __sgaOperStatic(self):
+        self.rowPosition = self.rowPosition + 2
+        self.workSheet["B"+str(self.rowPosition)] = "SGA OPERATION STATISTICS"
+        setFont = self.workSheet["B"+str(self.rowPosition)]
+        setFont.font = Font(name='Calibri', size=13, bold=True)
+
+        self.rowPosition = self.rowPosition + 1
+        self.workSheet["C"+str(self.rowPosition)] = "COMPONENT"
+        self.workSheet["D"+str(self.rowPosition)] = "START TIME"
+        self.workSheet["E"+str(self.rowPosition)] = "END TIME"
+        self.workSheet["F"+str(self.rowPosition)] = "OPER TYPE"
+        self.workSheet["G"+str(self.rowPosition)] = "OPER MODE"
+        self.workSheet["H"+str(self.rowPosition)] = "INITIAL MB"
+        self.workSheet["I"+str(self.rowPosition)] = "TARGET MB"
+        self.workSheet["J"+str(self.rowPosition)] = "FINAL MB"
+        self.workSheet["K"+str(self.rowPosition)] = "STATUS"
+
+        setFont = self.workSheet["C"+str(self.rowPosition)]
+        setFont.font = Font(name='Calibri',size=11, bold=True)
+        setFont = self.workSheet["D"+str(self.rowPosition)]
+        setFont.font = Font(name='Calibri',size=11, bold=True)
+        setFont = self.workSheet["E"+str(self.rowPosition)]
+        setFont.font = Font(name='Calibri',size=11, bold=True)
+        setFont = self.workSheet["F"+str(self.rowPosition)]
+        setFont.font = Font(name='Calibri',size=11, bold=True)
+        setFont = self.workSheet["G"+str(self.rowPosition)]
+        setFont.font = Font(name='Calibri',size=11, bold=True)
+        setFont = self.workSheet["H"+str(self.rowPosition)]
+        setFont.font = Font(name='Calibri',size=11, bold=True)
+        setFont = self.workSheet["I"+str(self.rowPosition)]
+        setFont.font = Font(name='Calibri',size=11, bold=True)
+        setFont = self.workSheet["J"+str(self.rowPosition)]
+        setFont.font = Font(name='Calibri',size=11, bold=True)
+        setFont = self.workSheet["K"+str(self.rowPosition)]
+        setFont.font = Font(name='Calibri',size=11, bold=True)
+
+        keyValue = list(self.sgaOPData.keys())
+        for x in range(0,len(self.sgaOPData)):
+            self.rowPosition = self.rowPosition + 1
+            self.workSheet["C"+str(self.rowPosition)] = self.sgaOPData[keyValue[x]]["COMPONENT"]
+            self.workSheet["D"+str(self.rowPosition)] = self.sgaOPData[keyValue[x]]["STARTTIME"]
+            self.workSheet["E"+str(self.rowPosition)] = self.sgaOPData[keyValue[x]]["ENDTIME"]
+            self.workSheet["F"+str(self.rowPosition)] = self.sgaOPData[keyValue[x]]["OPERTYPE"]
+            self.workSheet["G"+str(self.rowPosition)] = self.sgaOPData[keyValue[x]]["OPERMODE"]
+            self.workSheet["H"+str(self.rowPosition)] = self.sgaOPData[keyValue[x]]["INITMB"]
+            self.workSheet["I"+str(self.rowPosition)] = self.sgaOPData[keyValue[x]]["TARGETMB"]
+            self.workSheet["J"+str(self.rowPosition)] = self.sgaOPData[keyValue[x]]["FINALMB"]
+            self.workSheet["K"+str(self.rowPosition)] = self.sgaOPData[keyValue[x]]["STATUS"]
+
+            setFont = self.workSheet["C"+str(self.rowPosition)]
+            setFont.font = Font(name='Calibri',size=11)
+            setFont = self.workSheet["D"+str(self.rowPosition)]
+            setFont.font = Font(name='Calibri',size=11)
+            setFont = self.workSheet["E"+str(self.rowPosition)]
+            setFont.font = Font(name='Calibri',size=11)
+            setFont = self.workSheet["F"+str(self.rowPosition)]
+            setFont.font = Font(name='Calibri',size=11)
+            setFont = self.workSheet["G"+str(self.rowPosition)]
+            setFont.font = Font(name='Calibri',size=11)
+            setFont = self.workSheet["H"+str(self.rowPosition)]
+            setFont.font = Font(name='Calibri',size=11)
+            setFont = self.workSheet["I"+str(self.rowPosition)]
+            setFont.font = Font(name='Calibri',size=11)
+            setFont = self.workSheet["J"+str(self.rowPosition)]
+            setFont.font = Font(name='Calibri',size=11)
+            setFont = self.workSheet["K"+str(self.rowPosition)]
             setFont.font = Font(name='Calibri',size=11)
 
     def __tablespaceStatic(self):

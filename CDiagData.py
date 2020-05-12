@@ -12,6 +12,7 @@ class DiagData:
         self.__backupStatus()
         self.__alertStatus()
         self.__asmStatus()
+        self.__sgaOperation()
 
     # get DB NAME
     def __getDBName(self):
@@ -31,6 +32,28 @@ class DiagData:
         # 10 /2 = 5
         for x in range(0,int(len(pgaData)),2):
             self.pgaDataDict[pgaData[x]] = pgaData[x+1]
+
+    # poolUsage
+    def __sgaOperation(self):
+        self.sgaOperDataDict = {}
+        startPosition = self.sourceData.find("SgaOperStart")
+        endPosition = self.sourceData.find("SgaOperEnd")
+        sgaOperDataSource = self.sourceData[startPosition+13:endPosition-3]
+        sgaOperData = re.split('\||\\n',sgaOperDataSource)
+
+        if len(sgaOperData) > 1:
+            for x in range(0,int(len(sgaOperData)),10):
+                self.sgaOperDataDict[sgaOperData[x]] = {
+                    "COMPONENT"  : sgaOperData[x+1],
+                    "STARTTIME"  : sgaOperData[x+2],
+                    "ENDTIME"    : sgaOperData[x+3],
+                    "OPERTYPE"   : sgaOperData[x+4],
+                    "OPERMODE"   : sgaOperData[x+5],
+                    "INITMB"     : sgaOperData[x+6],
+                    "TARGETMB"   : sgaOperData[x+7],
+                    "FINALMB"    : sgaOperData[x+8],
+                    "STATUS"     : sgaOperData[x+9]
+                }
 
     # Tablespace
     def __tableSpaceUsage(self):
@@ -117,6 +140,7 @@ class DiagData:
         self.collectData['BKDATA']  = self.backupStatusDict
         self.collectData['ALERT']   = self.alertStatusDict
         self.collectData['ASM']     = self.asmStatusDict
+        self.collectData['SGAOP']   = self.sgaOperDataDict
         return self.collectData
 
     def printData(self):

@@ -6,7 +6,9 @@ import sys
 # Version 0.1
 #   Read logs, and generate Excel
 #   Not support RAC
-#   RAC will support on Version 0.2
+# Version 0.1.1
+#   Add SGA Operation while 1 days..
+
 
 if len(sys.argv) <= 1:
     print ("How to Usage : ")
