@@ -134,7 +134,8 @@ begin
  if isAlertExists = 0 then
   null;
  else
-  for al in (select to_char(originating_timestamp,'YYYY/MM/DD-HH24:MI:SS') dt, message_text
+  for al in (select to_char(originating_timestamp,'YYYY/MM/DD-HH24:MI:SS') dt,
+                    replace(replace(message_text,chr(10),''),chr(13),'') message_text
                from v$diag_alert_ext
               where message_text like '%ORA-%'
                 and originating_timestamp between trunc(sysdate-1) and sysdate
@@ -148,5 +149,5 @@ begin
 end;
 /
 prompt # AlertEnd
-spool off 
+spool off
 exit
