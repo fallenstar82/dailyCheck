@@ -88,12 +88,27 @@ end;
 /
 prompt # TablespaceEnd
 prompt # SgaOperStart
-select rownum||'|'||datalist from (
-select component||'|'||start_time||'|'||end_time||'|'||oper_type||'|'|| oper_mode||'|'|| initial_size/1024/1024||'|'|| target_size/1024/1024||'|'|| final_size/1024/1024||'|'||status datalist
-  from v$sga_resize_ops
- where oper_mode is not null
-   and start_time >= trunc(sysdate)-1
-order by component, start_time);
+declare
+begin
+ for sgaopdata in (select rownum||'|'||datalist as rawdt
+                     from (select component||'|'||
+                                  to_char(start_time,'YYYY/MM/DD HH24:MI:SS')||'|'||
+                                  to_char(end_time,'YYYY/MM/DD HH24:MI:SS')||'|'||
+                                  oper_type||'|'||
+                                  oper_mode||'|'||
+                                  initial_size/1024/1024||'|'||
+                                  target_size/1024/1024||'|'||
+                                  final_size/1024/1024||'|'||
+                                  status datalist
+                             from v$sga_resize_ops
+                            where oper_mode is not null
+                              and start_time >= trunc(sysdate)-1
+                           order by component, start_time)
+                   ) loop
+   dbms_output.put_line(sgaopdata.rawdt)
+ end loop;
+end;
+/
 prompt # SgaOperEnd
 prompt # AsmStart
 declare
