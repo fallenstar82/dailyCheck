@@ -91,7 +91,7 @@ select rownum||'|'||datalist from (
 select component||'|'||start_time||'|'||end_time||'|'||oper_type||'|'|| oper_mode||'|'|| initial_size/1024/1024||'|'|| target_size/1024/1024||'|'|| final_size/1024/1024||'|'||status datalist
   from v$sga_resize_ops
  where oper_mode is not null
-order by component, start_time)
+order by component, start_time);
 prompt # SgaOperEnd
 prompt # TablespaceEnd
 prompt # AsmStart
