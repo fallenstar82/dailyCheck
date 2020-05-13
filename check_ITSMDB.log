@@ -1,42 +1,99 @@
-# DBnameStart
-ITSMDB
-# DBnameEnd
-# MemoryStart
-SGA:9312 MB
-PGA:3104 MB
-PGALimit:6208 MB
-Used/Alloc:375.2 / 433.51 MB
-Freeable:10.63 MB
-Alloc/Lim:6.98% - Normal
-# MemoryEnd
-# SgaOperStart
-1|DEFAULT buffer cache|2019/12/19 03:35:53|2019/12/19 03:35:54|SHRINK|IMMEDIATE|11968|11456|11840|COMPLETE
-2|DEFAULT buffer cache|2020/02/05 14:45:08|2020/02/05 14:45:08|GROW|DEFERRED|11840|11904|11904|COMPLETE
-3|DEFAULT buffer cache|2020/02/05 14:50:08|2020/02/05 14:50:08|GROW|DEFERRED|11904|11968|11968|COMPLETE
-4|DEFAULT buffer cache|2020/02/05 14:53:08|2020/02/05 14:53:09|GROW|DEFERRED|11968|12032|12032|COMPLETE
-5|DEFAULT buffer cache|2020/02/05 14:56:15|2020/02/05 14:56:15|GROW|DEFERRED|12032|12096|12096|COMPLETE
-6|DEFAULT buffer cache|2020/02/18 11:00:14|2020/02/18 11:00:14|GROW|DEFERRED|12096|12160|12160|COMPLETE
-7|java pool|2020/02/05 14:45:08|2020/02/05 14:45:08|SHRINK|DEFERRED|448|384|384|COMPLETE
-8|java pool|2020/02/05 14:50:08|2020/02/05 14:50:08|SHRINK|DEFERRED|384|320|320|COMPLETE
-9|java pool|2020/02/05 14:53:08|2020/02/05 14:53:09|SHRINK|DEFERRED|320|256|256|COMPLETE
-10|java pool|2020/02/05 14:56:15|2020/02/05 14:56:15|SHRINK|DEFERRED|256|192|192|COMPLETE
-11|java pool|2020/02/18 11:00:14|2020/02/18 11:00:14|SHRINK|DEFERRED|192|128|128|COMPLETE
-# SgaOperEnd
-# TablespaceStart
-SYSAUX:6690:6350.5
-UNDOTBS1:10000:28.44
-USERS:2000:7.12
-ZITSM_IDX:500:408.75
-SYSTEM:3000:764.62
-ZITSM_DATA:2400:1884.87
-TS_IMAILER:500:1
-# TablespaceEnd
-# AsmStart
-# AsmEnd
-# BackupStatusStart
-2020/04/02-06:01:28     4.03G COMPLETED
-2020/04/01-06:01:27     3.89G COMPLETED
-2020/03/31-06:01:27     4.03G COMPLETED
-# BackupStatusEnd
-# AlertStart
-# AlertEnd
+{
+  "DBNAME" : "ITSMDB",
+  "MEMORY" : {
+               "SGA" : "9312",
+               "PGA" : "3104",
+               "PGALIMIT" : "6208",
+               "UPA" : "375.2 / 433.51",
+               "FREEABLE" : "10.63",
+               "APL" : "6.98% - Normal"
+             },
+  "SGAOPER" : {
+                 "DEFAULT buffer cache" : [
+                                            {
+                                              "STARTDATE" : "2019/12/19 03:35:53",
+                                              "ENDDATE"   : "2019/12/19 03:35:54",
+                                              "OPERATION" : "SHRINK",
+                                              "OPERTYPE"  : "IMMEDIATE",
+                                              "INITIAL"   : "11968",
+                                              "TARGET"    : "11456",
+                                              "FINAL"     : "11840",
+                                              "STATUS"    : "COMPLETE"
+                                            },
+                                            {
+                                              "STARTDATE" : "2020/02/05 14:45:08",
+                                              "ENDDATE"   : "2020/02/05 14:45:08",
+                                              "OPERATION" : "GROW",
+                                              "OPERTYPE"  : "DEFERRED",
+                                              "INITIAL"   : "11840",
+                                              "TARGET"    : "11904",
+                                              "FINAL"     : "11904",
+                                              "STATUS"    : "COMPLETE"
+                                            }
+                                          ],
+                 "java pool" :            [
+                                            {
+                                              "STARTDATE" : "2020/02/05 14:56:15",
+                                              "ENDDATE"   : "2020/02/05 14:56:15",
+                                              "OPERATION" : "SHRINK",
+                                              "OPERTYPE"  : "DEFERRED",
+                                              "INITIAL"   : "256",
+                                              "TARGET"    : "192",
+                                              "FINAL"     : "192",
+                                              "STATUS"    : "COMPLETE"
+                                            },
+                                            {
+                                              "STARTDATE" : "2020/02/18 11:00:14",
+                                              "ENDDATE"   : "2020/02/18 11:00:14",
+                                              "OPERATION" : "SHRINK",
+                                              "OPERTYPE"  : "DEFERRED",
+                                              "INITIAL"   : "192",
+                                              "TARGET"    : "128",
+                                              "FINAL"     : "128",
+                                              "STATUS"    : "COMPLETE"
+                                            }
+                                          ]
+              },
+  "TABLESPACE" : [
+                   {
+                     "NAME"  : "SYSAUX",
+                     "TOTAL" : "6690",
+                     "USED"  : "6350.5"
+                   },
+                   {
+                     "NAME"  : "UNDOTBS1",
+                     "TOTAL" : "10000",
+                     "USED"  : "28.44"
+                   }
+                 ],
+  "ASM" : [
+            {
+              "NAME"   : "CRSDG",
+              "TOTAL"  : "20464",
+              "USABLE" : "7234"
+            },
+            {
+              "NAME"   : "DATA",
+              "TOTAL"  : "3071940",
+              "USABLE" : "979808"
+            }
+          ],
+  "BACKUP" : [
+               {
+                 "STARTDATE" : "2020/04/01-06:01:27",
+                 "SIZE" : "4.03G",
+                 "STATUS" : "COMPLETED"
+               },
+               {
+                 "STARTDATE" : "2020/04/02-06:01:28",
+                 "SIZE" : "3.89G",
+                 "STATUS" : "COMPLETED"
+               }
+             ],
+  "ALERT" : [
+              {
+                "LOGDATE" : "2020/05/11-01:01:02",
+                "LOGMESSAGE" : "Errors in file /oracle/db/diag/rdbms/elsdb/elsdb2/trace/elsdb2_j000_12976424.trc:ORA-27468: \"\".\"\" is locked by another process"
+              }
+            ]
+}
