@@ -17,7 +17,6 @@ else:
     for x in range(1,len(sys.argv)):
         a = DiagData(sys.argv[x])
         x = a.getAllData()
-        print(x)
         z = GenExcel(x)
     # z.closeExcel()
 

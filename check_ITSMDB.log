@@ -1,10 +1,11 @@
 {
+  "DIAGDATE" : "2020-05-13",
   "DBNAME" : "ITSMDB",
   "MEMORY" : {
                "SGA" : "9312",
                "PGA" : "3104",
                "PGALIMIT" : "6208",
-               "UPA" : "375.2 / 433.51",
+               "USED PER ALLOC" : "375.2 / 433.51",
                "FREEABLE" : "10.63",
                "APL" : "6.98% - Normal"
              },
@@ -15,9 +16,9 @@
                                               "ENDDATE"   : "2019/12/19 03:35:54",
                                               "OPERATION" : "SHRINK",
                                               "OPERTYPE"  : "IMMEDIATE",
-                                              "INITIAL"   : "11968",
-                                              "TARGET"    : "11456",
-                                              "FINAL"     : "11840",
+                                              "INITIAL"   : 11968,
+                                              "TARGET"    : 11456,
+                                              "FINAL"     : 11840,
                                               "STATUS"    : "COMPLETE"
                                             },
                                             {
@@ -25,9 +26,9 @@
                                               "ENDDATE"   : "2020/02/05 14:45:08",
                                               "OPERATION" : "GROW",
                                               "OPERTYPE"  : "DEFERRED",
-                                              "INITIAL"   : "11840",
-                                              "TARGET"    : "11904",
-                                              "FINAL"     : "11904",
+                                              "INITIAL"   : 11840,
+                                              "TARGET"    : 11904,
+                                              "FINAL"     : 11904,
                                               "STATUS"    : "COMPLETE"
                                             }
                                           ],
@@ -37,9 +38,9 @@
                                               "ENDDATE"   : "2020/02/05 14:56:15",
                                               "OPERATION" : "SHRINK",
                                               "OPERTYPE"  : "DEFERRED",
-                                              "INITIAL"   : "256",
-                                              "TARGET"    : "192",
-                                              "FINAL"     : "192",
+                                              "INITIAL"   : 256,
+                                              "TARGET"    : 192,
+                                              "FINAL"     : 192,
                                               "STATUS"    : "COMPLETE"
                                             },
                                             {
@@ -47,9 +48,9 @@
                                               "ENDDATE"   : "2020/02/18 11:00:14",
                                               "OPERATION" : "SHRINK",
                                               "OPERTYPE"  : "DEFERRED",
-                                              "INITIAL"   : "192",
-                                              "TARGET"    : "128",
-                                              "FINAL"     : "128",
+                                              "INITIAL"   : 192,
+                                              "TARGET"    : 128,
+                                              "FINAL"     : 128,
                                               "STATUS"    : "COMPLETE"
                                             }
                                           ]
@@ -57,40 +58,44 @@
   "TABLESPACE" : [
                    {
                      "NAME"  : "SYSAUX",
-                     "TOTAL" : "6690",
-                     "USED"  : "6350.5"
+                     "TOTAL" : 6690,
+                     "USED"  : 6350.5
                    },
                    {
                      "NAME"  : "UNDOTBS1",
-                     "TOTAL" : "10000",
-                     "USED"  : "28.44"
+                     "TOTAL" : 10000,
+                     "USED"  : 28.44
                    }
                  ],
   "ASM" : [
             {
               "NAME"   : "CRSDG",
-              "TOTAL"  : "20464",
-              "USABLE" : "7234"
+              "TOTAL"  : 20464,
+              "USABLE" : 7234
             },
             {
               "NAME"   : "DATA",
-              "TOTAL"  : "3071940",
-              "USABLE" : "979808"
+              "TOTAL"  : 3071940,
+              "USABLE" : 979808
             }
           ],
   "BACKUP" : [
                {
                  "STARTDATE" : "2020/04/01-06:01:27",
-                 "SIZE" : "4.03G",
+                 "SIZE" : 4.03,
                  "STATUS" : "COMPLETED"
                },
                {
                  "STARTDATE" : "2020/04/02-06:01:28",
-                 "SIZE" : "3.89G",
+                 "SIZE" : 3.89,
                  "STATUS" : "COMPLETED"
                }
              ],
   "ALERT" : [
+              {
+                "LOGDATE" : "2020/05/11-01:01:02",
+                "LOGMESSAGE" : "Errors in file /oracle/db/diag/rdbms/elsdb/elsdb2/trace/elsdb2_j000_12976424.trc:ORA-27468: \"\".\"\" is locked by another process"
+              },
               {
                 "LOGDATE" : "2020/05/11-01:01:02",
                 "LOGMESSAGE" : "Errors in file /oracle/db/diag/rdbms/elsdb/elsdb2/trace/elsdb2_j000_12976424.trc:ORA-27468: \"\".\"\" is locked by another process"

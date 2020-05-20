@@ -32,14 +32,14 @@ class GenExcel:
 
     def __dataCollect(self, dataSet):
         self.dbName = dataSet['DBNAME']
-        self.tablespaceData = dataSet['TBSDATA']
         self.memoryData = dataSet['MEMORY']
-        self.asmData = dataSet['ASM']
+        self.tablespaceData = dataSet['TBSDATA']
         self.backupData = dataSet['BKDATA']
         self.alertData = dataSet['ALERT']
+        self.asmData = dataSet['ASM']
         self.sgaOPData = dataSet['SGAOP']
 
-    def __setNewSheet(self,):
+    def __setNewSheet(self):
         # 시트 새로 만들기
         self.workSheet = self.workBook.create_sheet(self.dbName)
         self.workBook.active
@@ -51,6 +51,10 @@ class GenExcel:
         self.workSheet.column_dimensions["E"].width = 19.15
         self.workSheet.column_dimensions["F"].width = 19.15
         self.workSheet.column_dimensions["G"].width = 19.15
+        self.workSheet.column_dimensions["H"].width = 19.15
+        self.workSheet.column_dimensions["I"].width = 19.15
+        self.workSheet.column_dimensions["J"].width = 19.15
+        self.workSheet.column_dimensions["K"].width = 19.15
 
     def __writeDBName(self):
         self.rowPosition=3
@@ -113,37 +117,45 @@ class GenExcel:
         setFont = self.workSheet["K"+str(self.rowPosition)]
         setFont.font = Font(name='Calibri',size=11, bold=True)
 
-        keyValue = list(self.sgaOPData.keys())
-        for x in range(0,len(self.sgaOPData)):
-            self.rowPosition = self.rowPosition + 1
-            self.workSheet["C"+str(self.rowPosition)] = self.sgaOPData[keyValue[x]]["COMPONENT"]
-            self.workSheet["D"+str(self.rowPosition)] = self.sgaOPData[keyValue[x]]["STARTTIME"]
-            self.workSheet["E"+str(self.rowPosition)] = self.sgaOPData[keyValue[x]]["ENDTIME"]
-            self.workSheet["F"+str(self.rowPosition)] = self.sgaOPData[keyValue[x]]["OPERTYPE"]
-            self.workSheet["G"+str(self.rowPosition)] = self.sgaOPData[keyValue[x]]["OPERMODE"]
-            self.workSheet["H"+str(self.rowPosition)] = self.sgaOPData[keyValue[x]]["INITMB"]
-            self.workSheet["I"+str(self.rowPosition)] = self.sgaOPData[keyValue[x]]["TARGETMB"]
-            self.workSheet["J"+str(self.rowPosition)] = self.sgaOPData[keyValue[x]]["FINALMB"]
-            self.workSheet["K"+str(self.rowPosition)] = self.sgaOPData[keyValue[x]]["STATUS"]
-
+        self.rowPosition = self.rowPosition + 1
+        # SGA 변경내역은 키값이 0이 아니므로 키값이 0 이 있는 아이를 찾아 존재하면 SGA 변경내역이 없는것으로 판단.
+        if 0 in self.sgaOPData:
+            self.workSheet["C"+str(self.rowPosition)] = "No SGA Operations during period"
             setFont = self.workSheet["C"+str(self.rowPosition)]
             setFont.font = Font(name='Calibri',size=11)
-            setFont = self.workSheet["D"+str(self.rowPosition)]
-            setFont.font = Font(name='Calibri',size=11)
-            setFont = self.workSheet["E"+str(self.rowPosition)]
-            setFont.font = Font(name='Calibri',size=11)
-            setFont = self.workSheet["F"+str(self.rowPosition)]
-            setFont.font = Font(name='Calibri',size=11)
-            setFont = self.workSheet["G"+str(self.rowPosition)]
-            setFont.font = Font(name='Calibri',size=11)
-            setFont = self.workSheet["H"+str(self.rowPosition)]
-            setFont.font = Font(name='Calibri',size=11)
-            setFont = self.workSheet["I"+str(self.rowPosition)]
-            setFont.font = Font(name='Calibri',size=11)
-            setFont = self.workSheet["J"+str(self.rowPosition)]
-            setFont.font = Font(name='Calibri',size=11)
-            setFont = self.workSheet["K"+str(self.rowPosition)]
-            setFont.font = Font(name='Calibri',size=11)
+        else :
+            for keyValue in self.sgaOPData.keys():
+                self.workSheet["C"+str(self.rowPosition)] = keyValue
+                setFont = self.workSheet["C"+str(self.rowPosition)]
+                setFont.font = Font(name='Calibri',size=11)
+                for y in range(0,len(self.sgaOPData[keyValue])): # 각 풀에 대하여 변경된 횟수만큼 반복한다.
+                    self.workSheet["D"+str(self.rowPosition)] = self.sgaOPData[keyValue][y]["STARTDATE"]
+                    self.workSheet["E"+str(self.rowPosition)] = self.sgaOPData[keyValue][y]["ENDDATE"]
+                    self.workSheet["F"+str(self.rowPosition)] = self.sgaOPData[keyValue][y]["OPERATION"]
+                    self.workSheet["G"+str(self.rowPosition)] = self.sgaOPData[keyValue][y]["OPERTYPE"]
+                    self.workSheet["H"+str(self.rowPosition)] = self.sgaOPData[keyValue][y]["INITIAL"]
+                    self.workSheet["I"+str(self.rowPosition)] = self.sgaOPData[keyValue][y]["TARGET"]
+                    self.workSheet["J"+str(self.rowPosition)] = self.sgaOPData[keyValue][y]["FINAL"]
+                    self.workSheet["K"+str(self.rowPosition)] = self.sgaOPData[keyValue][y]["STATUS"]
+
+                    setFont = self.workSheet["D"+str(self.rowPosition)]
+                    setFont.font = Font(name='Calibri',size=11)
+                    setFont = self.workSheet["E"+str(self.rowPosition)]
+                    setFont.font = Font(name='Calibri',size=11)
+                    setFont = self.workSheet["F"+str(self.rowPosition)]
+                    setFont.font = Font(name='Calibri',size=11)
+                    setFont = self.workSheet["G"+str(self.rowPosition)]
+                    setFont.font = Font(name='Calibri',size=11)
+                    setFont = self.workSheet["H"+str(self.rowPosition)]
+                    setFont.font = Font(name='Calibri',size=11)
+                    setFont = self.workSheet["I"+str(self.rowPosition)]
+                    setFont.font = Font(name='Calibri',size=11)
+                    setFont = self.workSheet["J"+str(self.rowPosition)]
+                    setFont.font = Font(name='Calibri',size=11)
+                    setFont = self.workSheet["K"+str(self.rowPosition)]
+                    setFont.font = Font(name='Calibri',size=11)
+
+                    self.rowPosition = self.rowPosition + 1
 
     def __tablespaceStatic(self):
         self.rowPosition = self.rowPosition + 2
@@ -169,14 +181,13 @@ class GenExcel:
         setFont = self.workSheet["G"+str(self.rowPosition)]
         setFont.font = Font(name='Calibri',size=11, bold=True)
 
-        keyValue = list(self.tablespaceData.keys())
         for x in range(0,len(self.tablespaceData)):
             self.rowPosition = self.rowPosition + 1
-            self.workSheet["C"+str(self.rowPosition)] = keyValue[x]
-            self.workSheet["D"+str(self.rowPosition)] = self.tablespaceData[keyValue[x]]["Total"]
-            self.workSheet["E"+str(self.rowPosition)] = self.tablespaceData[keyValue[x]]["Used"]
-            self.workSheet["F"+str(self.rowPosition)] = self.tablespaceData[keyValue[x]]["PCT"]
-            self.workSheet["G"+str(self.rowPosition)] = self.tablespaceData[keyValue[x]]["Level"]
+            self.workSheet["C"+str(self.rowPosition)] = self.tablespaceData[x]["NAME"]
+            self.workSheet["D"+str(self.rowPosition)] = self.tablespaceData[x]["TOTAL"]
+            self.workSheet["E"+str(self.rowPosition)] = self.tablespaceData[x]["USED"]
+            self.workSheet["F"+str(self.rowPosition)] = self.tablespaceData[x]["PCT"]
+            self.workSheet["G"+str(self.rowPosition)] = self.tablespaceData[x]["LEVEL"]
 
             setFont = self.workSheet["C"+str(self.rowPosition)]
             setFont.font = Font(name='Calibri',size=11)
@@ -189,8 +200,6 @@ class GenExcel:
             setFont = self.workSheet["G"+str(self.rowPosition)]
             setFont.font = Font(name='Calibri',size=11)
 
-
-
     def __asmStatic(self):
         self.rowPosition = self.rowPosition + 2
         self.workSheet["B"+str(self.rowPosition)] = "ASM STATISTICS"
@@ -200,9 +209,10 @@ class GenExcel:
         self.rowPosition = self.rowPosition + 1
         self.workSheet["C"+str(self.rowPosition)] = "DG NAME"
         self.workSheet["D"+str(self.rowPosition)] = "TOTAL_MB"
-        self.workSheet["E"+str(self.rowPosition)] = "USABLE_FILE_MB"
-        self.workSheet["F"+str(self.rowPosition)] = "Free PCT"
-        self.workSheet["G"+str(self.rowPosition)] = "WARNING LEVEL"
+        self.workSheet["E"+str(self.rowPosition)] = "USED_MB"
+        self.workSheet["F"+str(self.rowPosition)] = "USABLE_FILE_MB"
+        self.workSheet["G"+str(self.rowPosition)] = "USED PCT"
+        self.workSheet["H"+str(self.rowPosition)] = "WARNING LEVEL"
 
         setFont = self.workSheet["C"+str(self.rowPosition)]
         setFont.font = Font(name='Calibri',size=11, bold=True)
@@ -214,26 +224,36 @@ class GenExcel:
         setFont.font = Font(name='Calibri',size=11, bold=True)
         setFont = self.workSheet["G"+str(self.rowPosition)]
         setFont.font = Font(name='Calibri',size=11, bold=True)
+        setFont = self.workSheet["H"+str(self.rowPosition)]
+        setFont.font = Font(name='Calibri',size=11, bold=True)
 
-        keyValue = list(self.asmData.keys())
-        for x in range(0,len(self.asmData)):
+        if self.asmData[0] == "NoASM":
             self.rowPosition = self.rowPosition + 1
-            self.workSheet["C"+str(self.rowPosition)] = keyValue[x]
-            self.workSheet["D"+str(self.rowPosition)] = self.asmData[keyValue[x]]["Total"]
-            self.workSheet["E"+str(self.rowPosition)] = self.asmData[keyValue[x]]["Usable"]
-            self.workSheet["F"+str(self.rowPosition)] = self.asmData[keyValue[x]]["FPCT"]
-            self.workSheet["G"+str(self.rowPosition)] = self.asmData[keyValue[x]]["Level"]
+            self.workSheet["C"+str(self.rowPosition)] = "This system doesn't use ASM Storage"
+            setFont = self.workSheet["C"+str(self.rowPosition)]
+            setFont.font = Font(name='Calibri',size=11)
+        else:
+            for x in range(0,len(self.asmData)):
+                self.rowPosition = self.rowPosition + 1
+                self.workSheet["C"+str(self.rowPosition)] = self.asmData[x]["NAME"]
+                self.workSheet["D"+str(self.rowPosition)] = self.asmData[x]["TOTAL"]
+                self.workSheet["E"+str(self.rowPosition)] = self.asmData[x]["USE"]
+                self.workSheet["F"+str(self.rowPosition)] = self.asmData[x]["USABLE"]
+                self.workSheet["G"+str(self.rowPosition)] = self.asmData[x]["PCT"]
+                self.workSheet["H"+str(self.rowPosition)] = self.asmData[x]["LEVEL"]
 
-            setFont = self.workSheet["F"+str(self.rowPosition)]
-            setFont.font = Font(name='Calibri',size=11)
-            setFont = self.workSheet["D"+str(self.rowPosition)]
-            setFont.font = Font(name='Calibri',size=11)
-            setFont = self.workSheet["E"+str(self.rowPosition)]
-            setFont.font = Font(name='Calibri',size=11)
-            setFont = self.workSheet["F"+str(self.rowPosition)]
-            setFont.font = Font(name='Calibri',size=11)
-            setFont = self.workSheet["G"+str(self.rowPosition)]
-            setFont.font = Font(name='Calibri',size=11)
+                setFont = self.workSheet["C"+str(self.rowPosition)]
+                setFont.font = Font(name='Calibri',size=11)
+                setFont = self.workSheet["D"+str(self.rowPosition)]
+                setFont.font = Font(name='Calibri',size=11)
+                setFont = self.workSheet["E"+str(self.rowPosition)]
+                setFont.font = Font(name='Calibri',size=11)
+                setFont = self.workSheet["F"+str(self.rowPosition)]
+                setFont.font = Font(name='Calibri',size=11)
+                setFont = self.workSheet["G"+str(self.rowPosition)]
+                setFont.font = Font(name='Calibri',size=11)
+                setFont = self.workSheet["H"+str(self.rowPosition)]
+                setFont.font = Font(name='Calibri',size=11)
 
     def __backupStatic(self):
         self.rowPosition = self.rowPosition + 2
@@ -243,7 +263,7 @@ class GenExcel:
 
         self.rowPosition = self.rowPosition + 1
         self.workSheet["C"+str(self.rowPosition)] = "START DATE"
-        self.workSheet["D"+str(self.rowPosition)] = "BACKUP SIZE"
+        self.workSheet["D"+str(self.rowPosition)] = "BACKUP SIZE(GB)"
         self.workSheet["E"+str(self.rowPosition)] = "BACKUP STATUS"
         setFont = self.workSheet["C"+str(self.rowPosition)]
         setFont.font = Font(name='Calibri',size=11, bold=True)
@@ -252,19 +272,22 @@ class GenExcel:
         setFont = self.workSheet["E"+str(self.rowPosition)]
         setFont.font = Font(name='Calibri',size=11, bold=True)
 
-        keyValue = list(self.backupData.keys())
-        for x in range(0,len(self.backupData)):
+        if self.backupData[0] == "NoBackup":
             self.rowPosition = self.rowPosition + 1
-            self.workSheet["C"+str(self.rowPosition)] = keyValue[x]
-            self.workSheet["D"+str(self.rowPosition)] = self.backupData[keyValue[x]]["BackupSize"]
-            self.workSheet["E"+str(self.rowPosition)] = self.backupData[keyValue[x]]["Status"]
+            self.workSheet["C"+str(self.rowPosition)] = "No RMAN Backup during period"
+        else:
+            for x in range(0,len(self.backupData)):
+                self.rowPosition = self.rowPosition + 1
+                self.workSheet["C"+str(self.rowPosition)] = self.backupData[x]["STARTDATE"]
+                self.workSheet["D"+str(self.rowPosition)] = self.backupData[x]["SIZE"]
+                self.workSheet["E"+str(self.rowPosition)] = self.backupData[x]["STATUS"]
 
-            setFont = self.workSheet["C"+str(self.rowPosition)]
-            setFont.font = Font(name='Calibri',size=11)
-            setFont = self.workSheet["D"+str(self.rowPosition)]
-            setFont.font = Font(name='Calibri',size=11)
-            setFont = self.workSheet["E"+str(self.rowPosition)]
-            setFont.font = Font(name='Calibri',size=11)
+                setFont = self.workSheet["C"+str(self.rowPosition)]
+                setFont.font = Font(name='Calibri',size=11)
+                setFont = self.workSheet["D"+str(self.rowPosition)]
+                setFont.font = Font(name='Calibri',size=11)
+                setFont = self.workSheet["E"+str(self.rowPosition)]
+                setFont.font = Font(name='Calibri',size=11)
 
     def __alertStatic(self):
         self.rowPosition = self.rowPosition + 2
@@ -280,16 +303,19 @@ class GenExcel:
         setFont = self.workSheet["D"+str(self.rowPosition)]
         setFont.font = Font(size=11, bold=True)
 
-        keyValue = list(self.alertData.keys())
-        for x in range(0,len(keyValue)):
+        if self.alertData[0] == "NoData":
             self.rowPosition = self.rowPosition + 1
-            self.workSheet["C"+str(self.rowPosition)] = keyValue[x]
-            self.workSheet["D"+str(self.rowPosition)] = self.alertData[keyValue[x]]
+            self.workSheet["C"+str(self.rowPosition)] = "No Errors during that period"
+        else:
+            for x in range(0,len(self.alertData)):
+                self.rowPosition = self.rowPosition + 1
+                self.workSheet["C"+str(self.rowPosition)] = self.alertData[x]["LOGDATE"]
+                self.workSheet["D"+str(self.rowPosition)] = self.alertData[x]["LOGMESSAGE"]
 
-            setFont = self.workSheet["C"+str(self.rowPosition)]
-            setFont.font = Font(name='Calibri',size=11)
-            setFont = self.workSheet["D"+str(self.rowPosition)]
-            setFont.font = Font(name='Calibri',size=11)
+                setFont = self.workSheet["C"+str(self.rowPosition)]
+                setFont.font = Font(name='Calibri',size=11)
+                setFont = self.workSheet["D"+str(self.rowPosition)]
+                setFont.font = Font(name='Calibri',size=11)
 
     def __closeExcel(self):
         # 엑셀 닫기
