@@ -3,7 +3,7 @@ set feedback off
 set timing off
 set heading off
 set trimspool on
-set serveroutput on
+set serveroutput on unlimitedw
 set lines 250
 column inst_name new_value inst_name_val
 select instance_name inst_name from v$instance;

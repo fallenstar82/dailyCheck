@@ -1,10 +1,9 @@
-import re
+import json
+
 class DiagData:
     def __init__(self, fileName):
-        self.fileData = open(fileName, mode='r', encoding='utf-8')
-        self.diagData = self.fileData.readlines()
-        self.sourceData = "".join(self.diagData)
-        self.fileData.close()
+        with open(fileName,'r') as f:
+            self.rawData = json.load(f)
 
         self.__getDBName()
         self.__pgaUsage()
@@ -16,124 +15,93 @@ class DiagData:
 
     # get DB NAME
     def __getDBName(self):
-        startPosition = self.sourceData.find("DBnameStart")
-        endPosition = self.sourceData.find("DBnameEnd")
-        dbNameSource = self.sourceData[startPosition+12:endPosition-3]
-        self.dbName = dbNameSource;
+        self.dbName = self.rawData["DBNAME"]
 
     # pgaUsage
     def __pgaUsage(self):
-        self.pgaDataDict = {}
-        startPosition = self.sourceData.find("MemoryStart")
-        endPosition = self.sourceData.find("MemoryEnd")
-        pgaDataSource = self.sourceData[startPosition+12:endPosition-3]
-        pgaData = re.split(':|\\n',pgaDataSource)
+        self.pgaDataDict = dict()
 
-        # 10 /2 = 5
-        for x in range(0,int(len(pgaData)),2):
-            self.pgaDataDict[pgaData[x]] = pgaData[x+1]
+        # 메모리 점검에 대한 키값을 가져온다.
+        memoryComponentsKeys = self.rawData["MEMORY"].keys()
 
-    # poolUsage
+        # 각 키값에 대한 값을 딕셔너리에 저장한다.
+        for keys in memoryComponentsKeys:
+            self.pgaDataDict[keys] = self.rawData["MEMORY"][keys]
+
+    # SGA 동적변화 점검
     def __sgaOperation(self):
-        self.sgaOperDataDict = {}
-        startPosition = self.sourceData.find("SgaOperStart")
-        endPosition = self.sourceData.find("SgaOperEnd")
-        sgaOperDataSource = self.sourceData[startPosition+13:endPosition-3]
-        sgaOperData = re.split('\||\\n',sgaOperDataSource)
+        self.sgaOperDataDict = dict()
 
-        if len(sgaOperData) > 1:
-            for x in range(0,int(len(sgaOperData)),10):
-                self.sgaOperDataDict[sgaOperData[x]] = {
-                    "COMPONENT"  : sgaOperData[x+1],
-                    "STARTTIME"  : sgaOperData[x+2],
-                    "ENDTIME"    : sgaOperData[x+3],
-                    "OPERTYPE"   : sgaOperData[x+4],
-                    "OPERMODE"   : sgaOperData[x+5],
-                    "INITMB"     : sgaOperData[x+6],
-                    "TARGETMB"   : sgaOperData[x+7],
-                    "FINALMB"    : sgaOperData[x+8],
-                    "STATUS"     : sgaOperData[x+9]
-                }
+        if self.rawData["SGAOPER"] == "NoData":
+            self.sgaOperDataDict[0] = "NoOper"
+        else:
+            sgaOperationComponentsKeys = self.rawData["SGAOPER"].keys()
+            for compKeys in sgaOperationComponentsKeys:
+                self.sgaOperDataDict[compKeys]=self.rawData["SGAOPER"][compKeys]
+
 
     # Tablespace
     def __tableSpaceUsage(self):
-        self.tableSpaceDict = {}
-        startPosition = self.sourceData.find("TablespaceStart")
-        endPosition = self.sourceData.find("TablespaceEnd")
-        tableSpaceSource = self.sourceData[startPosition+16:endPosition-3]
-        tableSpaceData = re.split(':|\\n',tableSpaceSource)
+        self.tableSpaceDict = dict()
 
-        for x in range(0,int(len(tableSpaceData)),3):
-            tablespaceUsed = round(float(tableSpaceData[x+2])/float(tableSpaceData[x+1])*100,2)
+        for cntVal in range(0,len(self.rawData["TABLESPACE"])):
+            self.tableSpaceDict[cntVal] = self.rawData["TABLESPACE"][cntVal]
+            tablespaceUsed = round(float(self.tableSpaceDict[cntVal]["USED"])/float(self.tableSpaceDict[cntVal]["TOTAL"])*100,2)
             if tablespaceUsed > 90.00:
                 tablespaceWarn = 'Critical'
             elif tablespaceUsed > 80.00:
                 tablespaceWarn = 'Warning'
             else:
                 tablespaceWarn = 'Normal'
-
-            self.tableSpaceDict[tableSpaceData[x]]={
-                 "Total" : tableSpaceData[x+1],
-                 "Used"  : tableSpaceData[x+2],
-                 "PCT"   : tablespaceUsed,
-                 "Level" : tablespaceWarn
-            }
+            self.tableSpaceDict[cntVal]["PCT"] = tablespaceUsed
+            self.tableSpaceDict[cntVal]["LEVEL"] = tablespaceWarn
 
     def __asmStatus(self):
-        self.asmStatusDict = {}
-        startPosition = self.sourceData.find("AsmStart")
-        endPosition = self.sourceData.find("AsmEnd")
-        asmStatusSource = self.sourceData[startPosition+9:endPosition-3]
+        self.asmStatusDict = dict()
 
-        asmStatusData = re.split(':|\\n',asmStatusSource)
-        if len(asmStatusData) > 1:
-            for x in range(0,int(len(asmStatusData)),3):
-                asmUsed = round(float(asmStatusData[x+2])/float(asmStatusData[x+1])*100,2)
-                if asmUsed < 10.00:
+        if self.rawData["ASM"] == "NoData":
+            self.asmStatusDict[0] = "NoASM"
+        else:
+            for cntVal in range(0,len(self.rawData["ASM"])):
+                self.asmStatusDict[cntVal] = self.rawData["ASM"][cntVal]
+
+                # ASM 사용율 집계
+                asmUse  = float(self.asmStatusDict[cntVal]["TOTAL"])-float(self.asmStatusDict[cntVal]["USABLE"])
+                asmUsed = round(asmUse/float(self.asmStatusDict[cntVal]["TOTAL"])*100,2)
+                if asmUsed > 90.00:
                     asmWarn = 'Critical'
-                elif asmUsed < 20.00:
+                elif asmUsed > 80.00:
                     asmWarn = 'Warning'
                 else:
                     asmWarn = 'Normal'
 
-                self.asmStatusDict[asmStatusData[x]] = {
-                    "Total" : asmStatusData[x+1],
-                    "Usable"  : asmStatusData[x+2],
-                    "FPCT"   : asmUsed,
-                    "Level" : asmWarn
-                }
+                # 사용량 및 사용율, 경고레벨 추가
+                self.asmStatusDict[cntVal]["USE"] = asmUse
+                self.asmStatusDict[cntVal]["PCT"] = asmUsed
+                self.asmStatusDict[cntVal]["LEVEL"] = asmWarn
 
     # BackupStatus
     def __backupStatus(self):
-        self.backupStatusDict = {}
-        startPosition = self.sourceData.find("BackupStatusStart")
-        endPosition = self.sourceData.find("BackupStatusEnd")
-        backupStatusSource = self.sourceData[startPosition+17:endPosition-3]
-        backupStatusData = backupStatusSource.split()
+        self.backupStatusDict = dict()
 
-        if len(backupStatusData) > 0:
-            for x in range(0,int(len(backupStatusData)/3+4),3):
-                self.backupStatusDict[backupStatusData[x]] = {
-                    "BackupSize" : backupStatusData[x+1],
-                        "Status" : backupStatusData[x+2]
-                }
+        if self.rawData["BACKUP"] == "NoData":
+            self.backupStatusDict[0] = "NoBackup"
+        else:
+            for cntVal in range(0,len(self.rawData["BACKUP"])):
+                self.backupStatusDict[cntVal] = self.rawData["BACKUP"][cntVal]
 
     # AlertStatus
     def __alertStatus(self):
-        self.alertStatusDict = {}
-        startPosition = self.sourceData.find("AlertStart")
-        endPosition = self.sourceData.find("AlertEnd")
-        alertStatusSource = self.sourceData[startPosition+11:endPosition-3]
-        alertStatusData = alertStatusSource.split("\n")
+        self.alertStatusDict = dict()
 
-        for x in range(0,len(alertStatusData)):
-            sourceData=alertStatusData[x]
-            alertDate=sourceData[0:19]
-            alertMsg=sourceData[20:]
-            self.alertStatusDict[alertDate] = alertMsg
+        if self.rawData["ALERT"] == "NoData":
+            self.alertStatusDict[0] = self.rawData["ALERT"]
+        else:
+            for cntVal in range(0,len(self.rawData["ALERT"])):
+                self.alertStatusDict[cntVal] = self.rawData["ALERT"][cntVal]
 
     def getAllData(self):
-        self.collectData={}
+        self.collectData = dict()
         self.collectData['DBNAME'] = self.dbName
         self.collectData['MEMORY']  = self.pgaDataDict
         self.collectData['TBSDATA'] = self.tableSpaceDict
@@ -144,6 +112,4 @@ class DiagData:
         return self.collectData
 
     def printData(self):
-        print(self.pgaDataDict)
-        print(self.tableSpaceDict)
-        print(self.backupStatusDict)
+        print(self.collectData)
