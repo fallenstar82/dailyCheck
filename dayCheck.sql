@@ -6,9 +6,10 @@ SET HEADING OFF
 SET LINES 300
 COLUMN INST_NAME NEW_VALUE INST_NAME_VAL
 COLUMN TODAY NEW_VALUE TODAY_VAL
-SELECT INSTANCE_NAME INST_NAME FROM V$INSTANCE;
+COLUMN HOST_NAME NEW_VALUE HOST_NAME_VAL
+SELECT INSTANCE_NAME INST_NAME, HOST_NAME HOST_NAME FROM V$INSTANCE;
 SELECT TO_CHAR(SYSDATE,'YYYY_MM_DD') TODAY FROM DUAL;
-SPOOL CHECK_&INST_NAME_VAL._&TODAY_VAL..log
+SPOOL CHECK_&HOST_NAME_VAL._&INST_NAME_VAL._&TODAY_VAL..log
 DECLARE
   V_CHECK_DATE               VARCHAR2(10);
   V_INSTANCE_NAME            VARCHAR2(35);
@@ -159,17 +160,17 @@ BEGIN
     V_TABLESPACE_CNT_CHECK := 1;
     DBMS_OUTPUT.PUT_LINE('"TABLESPACE" : [');
     FOR C_TBS IN (SELECT TABLESPACE_NAME NAME,
-                         TGB             TOTAL,
-                         TO_CHAR(ROUND((TGB-FGB)/TGB*100,2),'fm990.00')   USED
+                         TMB             TOTAL,
+                         TMB-FMB         USED
                     FROM (SELECT DF.TABLESPACE_NAME,
-                                 ROUND(DF.GB,2) TGB,
-                                 ROUND(FS.GB,2) FGB
+                                 ROUND(DF.MB,2) TMB,
+                                 ROUND(FS.MB,2) FMB
                             FROM (SELECT TABLESPACE_NAME,
-                                         SUM(BYTES)/1024/1024 AS GB
+                                         SUM(BYTES)/1024/1024 AS MB
                                     FROM DBA_DATA_FILES
                                   GROUP BY TABLESPACE_NAME) DF,
                                   (SELECT TABLESPACE_NAME,
-                                          SUM(BYTES)/1024/1024 AS GB
+                                          SUM(BYTES)/1024/1024 AS MB
                                      FROM DBA_FREE_SPACE
                                    GROUP BY TABLESPACE_NAME) FS
                             WHERE DF.TABLESPACE_NAME = FS.TABLESPACE_NAME(+))
