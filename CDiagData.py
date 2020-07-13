@@ -12,6 +12,7 @@ class DiagData:
         self.__alertStatus()
         self.__asmStatus()
         self.__sgaOperation()
+        self.__dataguardStatus()
 
     # get DB NAME
     def __getDBName(self):
@@ -90,6 +91,15 @@ class DiagData:
             for cntVal in range(0,len(self.rawData["BACKUP"])):
                 self.backupStatusDict[cntVal] = self.rawData["BACKUP"][cntVal]
 
+    def __dataguardStatus(self):
+        self.dataguardStatusDict = dict()
+
+        if self.rawData["DG"] == "NoData":
+            self.dataguardStatusDict[0] = "NoData"
+        else:
+            for cntVal in range(0,len(self.rawData["DG"])):
+                self.dataguardStatusDict[cntVal] = self.rawData["DG"][cntVal]
+
     # AlertStatus
     def __alertStatus(self):
         self.alertStatusDict = dict()
@@ -109,6 +119,7 @@ class DiagData:
         self.collectData['ALERT']   = self.alertStatusDict
         self.collectData['ASM']     = self.asmStatusDict
         self.collectData['SGAOP']   = self.sgaOperDataDict
+        self.collectData['DG']      = self.dataguardStatusDict
         return self.collectData
 
     def printData(self):

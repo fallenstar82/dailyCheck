@@ -257,6 +257,56 @@ BEGIN
     END IF;
   END;
   -- BACKUP 종료
+  -- DG 체크
+  DECLARE
+      V_USE_DG           BINARY_INTEGER;
+      V_CNT_CHECK        BINARY_INTEGER;
+      V_PRI_SCN          DATE;
+      V_DIFF             NUMBER(10,3);
+    BEGIN
+      SELECT COUNT(*) INTO V_USE_DG FROM V$DATAGUARD_CONFIG;
+      IF V_USE_DG > 0 THEN
+        V_CNT_CHECK := 1;
+        DBMS_OUTPUT.PUT_LINE('"DG" : [');
+        FOR DG_VALUE IN (
+          SELECT DB_UNIQUE_NAME,
+                 DEST_ROLE,
+                 TO_DATE(MINSCN,'YYYY/MM/DD HH24:MI:SS') MINSCN,
+                 TO_DATE(MAXSCN,'YYYY/MM/DD HH24:MI:SS') MAXSCN
+           FROM (SELECT DB_UNIQUE_NAME,
+                       DEST_ROLE,
+                       TO_CHAR(MIN(SCN_TO_TIMESTAMP(CURRENT_SCN)),'YYYY/MM/DD HH24:MI:SS') MINSCN,
+                       TO_CHAR(MAX(SCN_TO_TIMESTAMP(CURRENT_SCN)),'YYYY/MM/DD HH24:MI:SS') MAXSCN
+                  FROM GV$DATAGUARD_CONFIG
+              GROUP BY DB_UNIQUE_NAME, DEST_ROLE)
+          ORDER BY MAXSCN DESC
+        ) LOOP
+          DBMS_OUTPUT.PUT_LINE('{');
+          DBMS_OUTPUT.PUT_LINE('"DBUNIQNAME" : "'||DG_VALUE.DB_UNIQUE_NAME||'",');
+          DBMS_OUTPUT.PUT_LINE('"ROLE" : "'||DG_VALUE.DEST_ROLE||'",');
+          IF INSTR(DG_VALUE.DEST_ROLE,'PRIMARY') > 0 THEN
+            DBMS_OUTPUT.PUT_LINE('"SCN" : "'||TO_CHAR(DG_VALUE.MAXSCN,'YYYY/MM/DD HH24:MI:SS')||'"');
+            V_PRI_SCN := DG_VALUE.MAXSCN;
+          ELSE
+            DBMS_OUTPUT.PUT_LINE('"SCN" : "'||TO_CHAR(DG_VALUE.MINSCN,'YYYY/MM/DD HH24:MI:SS')||'",');
+              SELECT (V_PRI_SCN - DG_VALUE.MINSCN)*(24*60*60)
+                INTO V_DIFF
+                FROM DUAL;
+            DBMS_OUTPUT.PUT_LINE('"DIFF" : "'||V_DIFF||'"');
+          END IF;
+          IF V_CNT_CHECK = V_USE_DG THEN
+            DBMS_OUTPUT.PUT_LINE('}');
+          ELSE
+            DBMS_OUTPUT.PUT_LINE('},');
+            V_CNT_CHECK := V_CNT_CHECK + 1;
+          END IF;
+        END LOOP;
+        DBMS_OUTPUT.PUT_LINE('],');
+      ELSE
+        DBMS_OUTPUT.PUT_LINE('"DG" : "NoData",');
+      END IF;
+    END;
+  -- DG 종료
   -- ALERT 시작
   DECLARE
     V_ALERT_CNT         BINARY_INTEGER;

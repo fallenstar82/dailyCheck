@@ -24,6 +24,7 @@ class GenExcel:
         self.__writeDBName()
         self.__memoryStatic()
         self.__sgaOperStatic()
+        self.__dataguardStatic()
         self.__tablespaceStatic()
         self.__asmStatic()
         self.__backupStatic()
@@ -38,6 +39,7 @@ class GenExcel:
         self.alertData = dataSet['ALERT']
         self.asmData = dataSet['ASM']
         self.sgaOPData = dataSet['SGAOP']
+        self.dgData = dataSet['DG']
 
     def __setNewSheet(self):
         # 시트 새로 만들기
@@ -156,6 +158,49 @@ class GenExcel:
                     setFont.font = Font(name='Calibri',size=11)
 
                     self.rowPosition = self.rowPosition + 1
+
+    def __dataguardStatic(self):
+        self.rowPosition = self.rowPosition + 2
+        self.workSheet["B"+str(self.rowPosition)] = "DATAGUARD STATISTICS"
+        setFont = self.workSheet["B"+str(self.rowPosition)]
+        setFont.font = Font(name="Calibri",size=13, bold=True)
+
+        if self.dgData[0] == "NoData":
+            self.rowPosition = self.rowPosition + 1
+            self.workSheet["C"+str(self.rowPosition)] = "No Dataguard Configuration"
+        else:
+            self.rowPosition = self.rowPosition + 1
+            self.workSheet["C"+str(self.rowPosition)] = "DB UNIQ NAME"
+            self.workSheet["D"+str(self.rowPosition)] = "DB ROLE"
+            self.workSheet["E"+str(self.rowPosition)] = "CURR TIMESTAMP"
+            self.workSheet["F"+str(self.rowPosition)] = "DIFFERENCE"
+
+            setFont = self.workSheet["C"+str(self.rowPosition)]
+            setFont.font = Font(name='Calibri',size=11, bold=True)
+            setFont = self.workSheet["D"+str(self.rowPosition)]
+            setFont.font = Font(name='Calibri',size=11, bold=True)
+            setFont = self.workSheet["E"+str(self.rowPosition)]
+            setFont.font = Font(name='Calibri',size=11, bold=True)
+            setFont = self.workSheet["F"+str(self.rowPosition)]
+            setFont.font = Font(name='Calibri',size=11, bold=True)
+
+            for x in range(0,len(self.dgData)):
+                self.rowPosition = self.rowPosition + 1
+                self.workSheet["C"+str(self.rowPosition)] = self.dgData[x]["DBUNIQNAME"]
+                self.workSheet["D"+str(self.rowPosition)] = self.dgData[x]["ROLE"]
+                self.workSheet["E"+str(self.rowPosition)] = self.dgData[x]["SCN"]
+                if self.dgData[x]["ROLE"] == 'PRIMARY DATABASE':
+                    self.workSheet["F"+str(self.rowPosition)] = "-"
+                else:
+                    self.workSheet["F"+str(self.rowPosition)] = self.dgData[x]["DIFF"]
+
+                setFont = self.workSheet["C"+str(self.rowPosition)]
+                setFont.font = Font(name='Calibri',size=11)
+                setFont = self.workSheet["D"+str(self.rowPosition)]
+                setFont.font = Font(name='Calibri',size=11)
+                setFont = self.workSheet["E"+str(self.rowPosition)]
+                setFont.font = Font(name='Calibri',size=11)
+                setFont = self.workSheet["F"+str(self.rowPosition)]
 
     def __tablespaceStatic(self):
         self.rowPosition = self.rowPosition + 2
