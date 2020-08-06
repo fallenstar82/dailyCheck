@@ -179,7 +179,7 @@ class DataController:
 
     def getObjectId(self):
         sourceDBInfo = self.rawData['DBINFO']
-        if 'OTHER_NODE_INF' in self.rawData:
+        if 'OTHER_NODE_INFO' in self.rawData:
             otherDBInfo = sourceDBInfo['OTHER_NODE_INFO']
             del sourceDBInfo['OTHER_NODE_INFO']
         # monitoring_db 에 연결한다.
