@@ -10,34 +10,84 @@ COLUMN HOST_NAME NEW_VALUE HOST_NAME_VAL
 SELECT INSTANCE_NAME INST_NAME, HOST_NAME HOST_NAME FROM V$INSTANCE;
 SELECT TO_CHAR(SYSDATE,'YYYY_MM_DD') TODAY FROM DUAL;
 SPOOL CHECK_&HOST_NAME_VAL._&INST_NAME_VAL._&TODAY_VAL..log
-DECLARE
-  V_CHECK_DATE               VARCHAR2(10);
-  V_INSTANCE_NAME            VARCHAR2(35);
 BEGIN
-  -- TODAY 출력
-  SELECT TO_CHAR(SYSDATE) INTO V_CHECK_DATE FROM DUAL;
-  -- INSTANCE NAME 출력
-  SELECT INSTANCE_NAME INTO V_INSTANCE_NAME FROM V$INSTANCE;
-
-  -- jSON 포맷 시작
-  DBMS_OUTPUT.PUT_LINE('{');
-  DBMS_OUTPUT.PUT_LINE('"DIAGDATE" : "'||V_CHECK_DATE||'",');
-  DBMS_OUTPUT.PUT_LINE('"DBNAME" : "'||V_INSTANCE_NAME||'",');
+  DECLARE
+    V_CHECK_DATE               VARCHAR2(10);
+    V_RAC_INFO                 VARCHAR2(1);
+    V_INSTANCE_NUMBER          BINARY_INTEGER;
+    V_ONI_COUNT                BINARY_INTEGER;
+    V_ONI_COUNTER              BINARY_INTEGER;
+    CURSOR C_DBINFO IS
+    SELECT INSTANCE_NAME,
+           HOST_NAME,
+           VERSION||EDITION AS VERSION,
+           DATABASE_TYPE,
+           INSTANCE_NUMBER,
+           NAME,
+           DB_UNIQUE_NAME,
+           STARTUP_TIME
+      FROM V$INSTANCE, V$DATABASE;
+  BEGIN
+    -- TODAY 출력
+    SELECT TO_CHAR(SYSDATE,'YYYY_MM_DD') INTO V_CHECK_DATE FROM DUAL;
+    -- START JSON AND CHECKDATE
+    DBMS_OUTPUT.PUT_LINE('{');
+    DBMS_OUTPUT.PUT_LINE('"DIAGDATE" : "'||V_CHECK_DATE||'",');
+    DBMS_OUTPUT.PUT_LINE('"DIAGDATA_VERSION" : "0.1",');
+    -- DB 기본정보 입력
+    DBMS_OUTPUT.PUT_LINE('"DBINFO" : {');
+    FOR DBINFO IN C_DBINFO LOOP
+        DBMS_OUTPUT.PUT_LINE('"DBNAME" : "'||DBINFO.NAME||'",');
+        DBMS_OUTPUT.PUT_LINE('"DBUNQNAME" : "'||DBINFO.DB_UNIQUE_NAME||'",');
+        DBMS_OUTPUT.PUT_LINE('"INSTANCE_NAME" : "'||DBINFO.INSTANCE_NAME||'",');
+        DBMS_OUTPUT.PUT_LINE('"HOSTNAME" : "'||DBINFO.HOST_NAME||'",');
+        DBMS_OUTPUT.PUT_LINE('"VERSION" : "'||DBINFO.VERSION||'",');
+        DBMS_OUTPUT.PUT_LINE('"DATABASE_TYPE" : "'||DBINFO.DATABASE_TYPE||'",');
+        IF DBINFO.DATABASE_TYPE = 'RAC' THEN
+          SELECT COUNT(*) INTO V_ONI_COUNT FROM GV$INSTANCE WHERE INST_ID != DBINFO.INSTANCE_NUMBER;
+          DBMS_OUTPUT.PUT_LINE('"INSTANCE_NUMBER" : '||DBINFO.INSTANCE_NUMBER||',');
+          DBMS_OUTPUT.PUT_LINE('"OTHER_NODE_INFO" : [');
+          V_ONI_COUNTER := 1;
+          FOR ONI IN (
+            SELECT INSTANCE_NUMBER,
+                   INSTANCE_NAME,
+                   HOST_NAME
+              FROM GV$INSTANCE
+             WHERE INST_ID != DBINFO.INSTANCE_NUMBER
+          ) LOOP
+            DBMS_OUTPUT.PUT_LINE('{');
+            DBMS_OUTPUT.PUT_LINE('"INSTANCE_NUMBER" :'||ONI.INSTANCE_NUMBER||',');
+            DBMS_OUTPUT.PUT_LINE('"INSTANCE_NAME" : "'||ONI.INSTANCE_NAME||'",');
+            DBMS_OUTPUT.PUT_LINE('"HOSTNAME" : "'||ONI.HOST_NAME||'"');
+            IF V_ONI_COUNTER = V_ONI_COUNT THEN
+              DBMS_OUTPUT.PUT_LINE('}');
+            ELSE
+              DBMS_OUTPUT.PUT_LINE('},');
+              V_ONI_COUNTER := V_ONI_COUNTER + 1;
+            END IF;
+          END LOOP;
+          DBMS_OUTPUT.PUT_LINE(']');
+        ELSE
+          DBMS_OUTPUT.PUT_LINE('"INSTANCE_NUMBER" : '||DBINFO.INSTANCE_NUMBER);
+        END IF;
+    END LOOP;
+    DBMS_OUTPUT.PUT_LINE('},');
+  END;
   -- 메모리 시작
   DBMS_OUTPUT.PUT_LINE('"MEMORY" : {');
   DECLARE
     V_VERSION            BINARY_INTEGER;
     V_TOTAL_SGA          NUMBER(10,2);
-    V_TOTAL_PGA          NUMBER(10,2);
+    V_USED_PGA           NUMBER(10,2);
     V_LIMIT_PGA          NUMBER(10,2);
     V_ALLOC_PGA          NUMBER(10,2);
     V_FREEABLE_PGA       NUMBER(10,2);
     V_TARGET_PGA         NUMBER(10,2);
-    V_USE_RATE            NUMBER(5,2);
+    V_USE_RATE           NUMBER(5,2);
     V_PGA_RESULT         VARCHAR2(25);
   BEGIN
     -- GET VERSION
-    SELECT TO_NUMBER(SUBSTR(VERSION,1,2)) INTO V_VERSION
+    SELECT TO_NUMBER(SUBSTR(VERSION,1,INSTR(VERSION,'.',1)-1)) INTO V_VERSION
       FROM V$INSTANCE;
     -- GET pga_aggregate_target PARAMETER IN MB
     SELECT VALUE/1024/1024 INTO V_TARGET_PGA
@@ -49,7 +99,7 @@ BEGIN
     SELECT SUM(PGA_USED_MEM)/1024/1024,
            SUM(PGA_ALLOC_MEM)/1024/1024,
            SUM(PGA_FREEABLE_MEM)/1024/1024
-      INTO V_TOTAL_PGA, V_ALLOC_PGA, V_FREEABLE_PGA
+      INTO V_USED_PGA, V_ALLOC_PGA, V_FREEABLE_PGA
      FROM V$PROCESS;
     -- Version >= 12
     IF V_VERSION >= 12 THEN
@@ -59,6 +109,8 @@ BEGIN
     END IF;
     DBMS_OUTPUT.PUT_LINE('"SGA" : '||V_TOTAL_SGA||',');
     DBMS_OUTPUT.PUT_LINE('"PGA" : '||V_TARGET_PGA||',');
+    DBMS_OUTPUT.PUT_LINE('"ALLOCATE" : '||V_ALLOC_PGA||',');
+    DBMS_OUTPUT.PUT_LINE('"USED" : '||V_USED_PGA||',');
     -- 12버전 이상일 경우 pga limit 기준으로 사용율 조회, 이하일 경우 pga target 기준.
     IF V_VERSION >=12 THEN
       DBMS_OUTPUT.PUT_LINE('"PGALIMIT" : '||V_LIMIT_PGA||',');
@@ -66,16 +118,7 @@ BEGIN
     ELSE
       V_USE_RATE := ROUND(V_ALLOC_PGA/V_TARGET_PGA * 100,2);
     END IF;
-    DBMS_OUTPUT.PUT_LINE('"USED PER ALLOC" : "'||V_TOTAL_PGA||' / '||V_ALLOC_PGA||'",');
-    DBMS_OUTPUT.PUT_LINE('"FREEABLE" : '||V_FREEABLE_PGA||',');
-    IF V_USE_RATE <= 50 THEN
-      V_PGA_RESULT := 'Normal';
-    ELSIF V_USE_RATE <=80 THEN
-      V_PGA_RESULT := 'Warning';
-    ELSE
-      V_PGA_RESULT := 'Critical';
-    END IF;
-    DBMS_OUTPUT.PUT_LINE('"APL" : "'||V_USE_RATE||'% - '||V_PGA_RESULT||'"');
+    DBMS_OUTPUT.PUT_LINE('"FREEABLE" : '||V_FREEABLE_PGA);
     DBMS_OUTPUT.PUT_LINE('},');
   END;
   -- 메모리 종료
@@ -199,14 +242,18 @@ BEGIN
     V_ASM_CNT_CHECK := 1;
     IF V_ASM_CNT > 0 THEN
       DBMS_OUTPUT.PUT_LINE('"ASM" : [');
-      FOR C_ASM IN (SELECT NAME,
+      FOR C_ASM IN (SELECT GROUP_NUMBER,
+                           NAME,
                            TOTAL_MB,
-                           USABLE_FILE_MB
+                           USABLE_FILE_MB,
+                           TYPE
                       FROM V$ASM_DISKGROUP) LOOP
         DBMS_OUTPUT.PUT_LINE('{');
+        DBMS_OUTPUT.PUT_LINE('"GROUP_NUMBER" : '||C_ASM.GROUP_NUMBER||',');
         DBMS_OUTPUT.PUT_LINE('"NAME" : "'||C_ASM.NAME||'",');
         DBMS_OUTPUT.PUT_LINE('"TOTAL" : '||C_ASM.TOTAL_MB||',');
-        DBMS_OUTPUT.PUT_LINE('"USABLE" : '||C_ASM.USABLE_FILE_MB);
+        DBMS_OUTPUT.PUT_LINE('"USABLE" : '||C_ASM.USABLE_FILE_MB||',');
+        DBMS_OUTPUT.PUT_LINE('"REDUNDANCY" : "'||C_ASM.TYPE||'"');
         IF V_ASM_CNT_CHECK < V_ASM_CNT THEN
           DBMS_OUTPUT.PUT_LINE('},');
           V_ASM_CNT_CHECK := V_ASM_CNT_CHECK + 1;
@@ -263,49 +310,48 @@ BEGIN
       V_CNT_CHECK        BINARY_INTEGER;
       V_PRI_SCN          DATE;
       V_DIFF             NUMBER(10,3);
-    BEGIN
-      SELECT COUNT(*) INTO V_USE_DG FROM V$DATAGUARD_CONFIG;
-      IF V_USE_DG > 0 THEN
-        V_CNT_CHECK := 1;
-        DBMS_OUTPUT.PUT_LINE('"DG" : [');
-        FOR DG_VALUE IN (
-          SELECT DB_UNIQUE_NAME,
-                 DEST_ROLE,
-                 TO_DATE(MINSCN,'YYYY/MM/DD HH24:MI:SS') MINSCN,
-                 TO_DATE(MAXSCN,'YYYY/MM/DD HH24:MI:SS') MAXSCN
-           FROM (SELECT DB_UNIQUE_NAME,
-                       DEST_ROLE,
-                       TO_CHAR(MIN(SCN_TO_TIMESTAMP(CURRENT_SCN)),'YYYY/MM/DD HH24:MI:SS') MINSCN,
-                       TO_CHAR(MAX(SCN_TO_TIMESTAMP(CURRENT_SCN)),'YYYY/MM/DD HH24:MI:SS') MAXSCN
-                  FROM GV$DATAGUARD_CONFIG
-              GROUP BY DB_UNIQUE_NAME, DEST_ROLE)
-          ORDER BY MAXSCN DESC
-        ) LOOP
-          DBMS_OUTPUT.PUT_LINE('{');
-          DBMS_OUTPUT.PUT_LINE('"DBUNIQNAME" : "'||DG_VALUE.DB_UNIQUE_NAME||'",');
-          DBMS_OUTPUT.PUT_LINE('"ROLE" : "'||DG_VALUE.DEST_ROLE||'",');
-          IF INSTR(DG_VALUE.DEST_ROLE,'PRIMARY') > 0 THEN
-            DBMS_OUTPUT.PUT_LINE('"SCN" : "'||TO_CHAR(DG_VALUE.MAXSCN,'YYYY/MM/DD HH24:MI:SS')||'"');
-            V_PRI_SCN := DG_VALUE.MAXSCN;
-          ELSE
-            DBMS_OUTPUT.PUT_LINE('"SCN" : "'||TO_CHAR(DG_VALUE.MINSCN,'YYYY/MM/DD HH24:MI:SS')||'",');
-              SELECT (V_PRI_SCN - DG_VALUE.MINSCN)*(24*60*60)
-                INTO V_DIFF
-                FROM DUAL;
-            DBMS_OUTPUT.PUT_LINE('"DIFF" : "'||V_DIFF||'"');
-          END IF;
-          IF V_CNT_CHECK = V_USE_DG THEN
-            DBMS_OUTPUT.PUT_LINE('}');
-          ELSE
-            DBMS_OUTPUT.PUT_LINE('},');
-            V_CNT_CHECK := V_CNT_CHECK + 1;
-          END IF;
-        END LOOP;
-        DBMS_OUTPUT.PUT_LINE('],');
-      ELSE
-        DBMS_OUTPUT.PUT_LINE('"DG" : "NoData",');
-      END IF;
-    END;
+  BEGIN
+    SELECT COUNT(*) INTO V_USE_DG FROM V$DATAGUARD_CONFIG;
+    IF V_USE_DG > 0 THEN
+      V_CNT_CHECK := 1;
+      DBMS_OUTPUT.PUT_LINE('"DG" : [');
+      FOR DG_VALUE IN (
+        SELECT LEVEL,
+               INDX,
+               INST_ID,
+               DGCDBUN  DB_UNIQ_ID,
+               DGCPDBUN PARENT_DB_UNIQ_ID,
+               DECODE(DGCDROLE, 1, 'PRIMARY DATABASE' ,
+                                2, 'PHYSICAL STANDBY' ,
+                                3, 'SNAPSHOT STANDBY' ,
+                                4, 'FAR SYNC INSTANCE',
+                                5, 'LOGICAL STANDBY'  ,
+                                6, 'BACKUP APPLIANCE' ,
+                                'UNKNOWN') DB_ROLE,
+               TO_CHAR(SCN_TO_TIMESTAMP(DGCSCN),'YYYY/MM/DD HH24:MI:SS') CURRENT_SCN
+          FROM X$KRSTDGC
+        CONNECT BY PRIOR DGCDBUN = DGCPDBUN
+        START WITH DGCPDBUN = 'NONE'
+      ) LOOP
+        DBMS_OUTPUT.PUT_LINE('{');
+        DBMS_OUTPUT.PUT_LINE('"LEVEL" : '||DG_VALUE.LEVEL||',');
+        DBMS_OUTPUT.PUT_LINE('"INST_ID" : '||DG_VALUE.INST_ID||',');
+        DBMS_OUTPUT.PUT_LINE('"DBUNIQNAME" : "'||DG_VALUE.DB_UNIQ_ID||'",');
+        DBMS_OUTPUT.PUT_LINE('"PARENTDB" : "'||DG_VALUE.PARENT_DB_UNIQ_ID||'",');
+        DBMS_OUTPUT.PUT_LINE('"ROLE" : "'||DG_VALUE.DB_ROLE||'",');
+        DBMS_OUTPUT.PUT_LINE('"SCN" : "'||DG_VALUE.CURRENT_SCN||'"');
+        IF V_CNT_CHECK = V_USE_DG THEN
+          DBMS_OUTPUT.PUT_LINE('}');
+        ELSE
+          DBMS_OUTPUT.PUT_LINE('},');
+          V_CNT_CHECK := V_CNT_CHECK + 1;
+        END IF;
+      END LOOP;
+      DBMS_OUTPUT.PUT_LINE('],');
+    ELSE
+      DBMS_OUTPUT.PUT_LINE('"DG" : "NoData",');
+    END IF;
+  END;
   -- DG 종료
   -- ALERT 시작
   DECLARE
