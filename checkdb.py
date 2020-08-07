@@ -5,17 +5,17 @@ import argparse
 #     print("HelpMsg")
 #     quit()
 
-if len(sys.argv) < 2:
-    print ("-h to Help")
+# if len(sys.argv) < 2:
+#     print ("-h to Help")
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description = 'Daily Database Diag Program')
-    group = parser.add_mutually_exclusive_group()
-    group.add_argument('-l', help='Show Database List', metavar='<dbUniqueName> or All')
-    group.add_argument('-a', nargs='*', help='add Diaglog file.', metavar='logfilename')
-    group.add_argument('-e', help='make Excel file. Output filename will be \'DailyCheck_<date>.xlsx\'.', metavar='dbunqname or all')
-    parser.add_argument('-v', help='verbose', action='store_true')
-    args=parser.parse_args()
+    parser_main = argparse.ArgumentParser(description = 'Daily Database Diag Program', prog='checkdb')
+    group_main = parser_main.add_mutually_exclusive_group()
+    group_main.add_argument('-l', help='Show Database List', metavar='<dbUniqueName> or All')
+    group_main.add_argument('-a', nargs='*', help='add Diaglog file.', metavar='logfilename')
+    group_main.add_argument('-e', help='make Excel file. Output filename will be \'DailyCheck_<date>.xlsx\'.', metavar='dbunqname or all')
+    # group_main.add_argument('-r', help='Report Diag Stats',choices=['ts','pga'])
+    args=parser_main.parse_args()
 
 if args.a :
     App = MC.MainController()
@@ -63,24 +63,8 @@ if args.l :
         for dbName in resultSet:
             print('%-19s'%dbName['DBUNQNAME'],'%20s'%dbName['VERSION'])
 
-
-
-# Option " -add"
-
-# Start Application
-# Imsi -a 이면 분석
-# if sys.argv[1] == '-a':
-
-
-
-
-
-
-
-
-# App = DC.DataController()
-# App.getDiagData('BOKGWON')
-#
-# # EXCEL
-# App = DC.DataController()
-# App.writeExcel(App.getDiagData('BOKGWON'))
+if args.r :
+    print("argument is : ",args.r)
+    if args.r == 'ts':
+        App = MC.MainController()
+        resultSet = App.reportTablesapceUsage(args.r)

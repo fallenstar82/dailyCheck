@@ -35,8 +35,8 @@ class DataController:
             "DBNAME" : dbInfo["DBNAME"],
             "DBUNQNAME" : dbInfo["DBUNQNAME"],
             "DATABASE_TYPE" : dbInfo["DATABASE_TYPE"],
-            "VERSION" : dbInfo["VERSION"]
-
+            "VERSION" : dbInfo["VERSION"],
+            "DIAGDATE" : today
         }
         # RAC 일 경우 연관된 노드들의 정보 가져와.
         # 첫 노드의 정보를 넣는다.
@@ -121,7 +121,6 @@ class DataController:
             else:
                 diagData["DATAGUARD"][instIdx] = {}
                 for index in diagRawData[instIdx]["DATAGUARD"].keys():
-                    print(diagRawData[instIdx]["DATAGUARD"])
                     diagData["DATAGUARD"][instIdx][index] = {
                         "INSTANCE_NUMBER" : diagRawData[instIdx]["DATAGUARD"][index]["INST_ID"],
                         "DBUNIQNAME" : diagRawData[instIdx]["DATAGUARD"][index]["DBUNIQNAME"],
