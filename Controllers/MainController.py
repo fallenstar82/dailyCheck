@@ -16,17 +16,12 @@ class MainController():
         analyzedData = self.App.doAnalyze(objectId)
         result = self.App.addAnalyzeData(analyzedData)
 
-    def genExcel(self, dbname):
-        self.App.writeExcel(self.App.getDiagData(dbname))
+    def genExcel(self, dbUniqName, hostname):
+        self.App.writeExcel(self.App.getDiagData(dbUniqName, hostname))
 
     def getDbList(self, dbName={}):
-        dbList = list()
-        temp   = list()
         resultSet = self.App.getDbList(dbName)
-        for rs in resultSet:
-            if rs['DBUNQNAME'] in temp:
-                pass
-            else:
-                dbList.append(rs)
-                temp.append(rs['DBUNQNAME'])
-        return dbList
+        return resultSet
+
+    def makeDbList(self, data):
+        return self.App.makeDbList(data)

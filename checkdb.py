@@ -1,13 +1,6 @@
 import Controllers.MainController as MC
 import sys
 import argparse
-# if len(sys.argv) <= 1:
-#     print("HelpMsg")
-#     quit()
-
-# if len(sys.argv) < 2:
-#     print ("-h to Help")
-
 if __name__ == "__main__":
     parser_main = argparse.ArgumentParser(description = 'Daily Database Diag Program', prog='checkdb')
     group_main = parser_main.add_mutually_exclusive_group()
@@ -28,23 +21,24 @@ if args.a :
     else:
         fnames = args.a
     for x in fnames:
-        print(x)
+        print('logfile processing : ',x)
         App.addDiagData(x)
 
 if args.e :
     if args.e.upper() == 'ALL':
         param = {}
     else:
-        param = { 'DBUNQNAME' : args.e.upper() }
+        param = { 'DBUNQNAME' : args.e }
     App = MC.MainController()
     resultSet = App.getDbList(param)
-
-    if len(resultSet) == 0:
+    if resultSet == None:
         print("No Database found")
     else:
-        for dbName in resultSet:
-            print("Generating : ", dbName['DBUNQNAME'])
-            App.genExcel(dbName['DBUNQNAME'])
+        # DB NAME - HOSTNAME 및 RAC 로 리스트 정리.
+        orderedDbList = App.makeDbList(resultSet)
+        for index in orderedDbList.keys():
+            print("Generating : DBUNQNAME - ","%-14s"%orderedDbList[index]['DBUNQNAME'],"%-12s"%orderedDbList[index]['HOSTNAME'])
+            App.genExcel(orderedDbList[index]['DBUNQNAME'], orderedDbList[index]['HOSTNAME'])
 
 if args.l :
     if args.l.upper() == 'ALL':
@@ -55,16 +49,19 @@ if args.l :
     resultSet = App.getDbList(param)
     print("DATABASE LIST")
     print("=====================")
-    print("DB UNIQUE NAME              VERSION")
-    print("--------------------------- --------------------")
-    if len(resultSet) == 0:
+    print("%-14s"%"DB UNIQUE NAME","%-12s"%"VERSION","%-14s"%"INSTANCE_NAME","%-12s"%"HOSTNAME")
+    print("-------------- ------------ -------------- ------------")
+    if resultSet == None:
         print("No Database found")
     else:
         for dbName in resultSet:
-            print('%-19s'%dbName['DBUNQNAME'],'%20s'%dbName['VERSION'])
-
-if args.r :
-    print("argument is : ",args.r)
-    if args.r == 'ts':
-        App = MC.MainController()
-        resultSet = App.reportTablesapceUsage(args.r)
+            print('%-14s'%dbName['DBUNQNAME'],
+                  '%-12s'%dbName['VERSION'],
+                  '%-14s'%dbName['INSTANCE_NAME'],
+                  '%-12s'%dbName['HOSTNAME'])
+#
+# if args.r :
+#     print("argument is : ",args.r)
+#     if args.r == 'ts':
+#         App = MC.MainController()
+#         resultSet = App.reportTablesapceUsage(args.r)

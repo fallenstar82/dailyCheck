@@ -7,12 +7,22 @@ class DataController:
         with open(fileName,'r') as f:
             self.rawData = json.load(f)
 
-    def getObjectId(self, dbUniqName):
+    def getObjectId(self):
         dbConn = DataModel.DataModel('monitoring_db')
-        resultSet=dbConn.getData('dblist', { "DBUNQNAME" : dbUniqName }, countYN='N', mDocs='N')
+        dbUniqName = self.rawData["DBINFO"]["DBUNQNAME"]
+        dbName     = self.rawData["DBINFO"]["DBNAME"]
+        instName   = self.rawData["DBINFO"]["INSTANCE_NAME"]
+
+        resultSet=dbConn.getData('dblist',
+                                 { "DBUNQNAME" : self.rawData["DBINFO"]["DBUNQNAME"],
+                                   "DBNAME"    : self.rawData["DBINFO"]["DBNAME"],
+                                   "INSTANCE_NAME" : self.rawData["DBINFO"]["INSTANCE_NAME"],
+                                   "HOSTNAME"  : self.rawData["DBINFO"]["HOSTNAME"],
+                                   "INSTANCE_NUMBER" : self.rawData["DBINFO"]["INSTANCE_NUMBER"]
+                                 }, countYN='N', mDocs='N')
         return resultSet
 
-    def getDiagData(self, dbUniqName):
+    def getDiagData(self, dbUniqName, hostname):
         import datetime
         today = datetime.datetime(
             datetime.date.today().year,
@@ -26,7 +36,8 @@ class DataController:
         dbConn = DataModel.DataModel('monitoring_db')
         dbInfo = dbConn.getData(
             'dblist',
-            { "DBUNQNAME" : dbUniqName},
+            { "DBUNQNAME" : dbUniqName,
+              "HOSTNAME"  : hostname},
             countYN='N',
             mDocs='N'
         )
@@ -139,7 +150,7 @@ class DataController:
 
     def getDbList(self, dbName={}):
         dbConn = DataModel.DataModel('monitoring_db')
-        return dbConn.getData('dblist',dbName, returnColumn = {'DBUNQNAME':True, '_id':False,'VERSION':True}, mDocs='Y')
+        return dbConn.getData('dblist',dbName, returnColumn = {'DBUNQNAME':True, '_id':False,'VERSION':True, 'INSTANCE_NAME':True, 'HOSTNAME':True}, mDocs='Y')
 
     def writeExcel(self, dataSource):
         import Controllers.ExcelController as EC
@@ -157,13 +168,18 @@ class DataController:
         Exc.closeExcel()
 
     def addDatabaseInfo(self):
+        dbConn = DataModel.DataModel('monitoring_db')
+        otherDBInfo = list()
         sourceDBInfo = self.rawData['DBINFO']
-        del sourceDBInfo['OTHER_NODE_INFO']
+        if 'OTHER_NODE_INFO' in sourceDBInfo:
+            otherDBInfo = sourceDBInfo['OTHER_NODE_INFO']
+            del sourceDBInfo['OTHER_NODE_INFO']
         # RAC 일 경우 기존 노드가 있는지 확인한다.
         if sourceDBInfo["DATABASE_TYPE"] == 'RAC':
-            sourceDBInfo["CLUSTER_NODES"] = []
+            sourceDBInfo["CLUSTER_NODES"] = list()
             for nodeinfo in otherDBInfo:
                 relatedNodeList = dbConn.getData('dblist',nodeinfo,"_id")
+                #기존에 연관된 노드가 있을 경우 신규 노드에 기존 노드 추가
                 if relatedNodeList is not None:
                     sourceDBInfo["CLUSTER_NODES"].append(relatedNodeList["_id"])
             resultSet = dbConn.addData('dblist',sourceDBInfo)
@@ -175,43 +191,6 @@ class DataController:
         else:
             resultSet = dbConn.addData('dblist',sourceDBInfo)
         return resultSet.inserted_id
-
-    def getObjectId(self):
-        sourceDBInfo = self.rawData['DBINFO']
-        if 'OTHER_NODE_INFO' in self.rawData:
-            otherDBInfo = sourceDBInfo['OTHER_NODE_INFO']
-            del sourceDBInfo['OTHER_NODE_INFO']
-        # monitoring_db 에 연결한다.
-        dbConn = DataModel.DataModel('monitoring_db')
-        # 기존에 등록된 데이터베이스인지 확인한다.
-        resultSet = dbConn.getData(
-            'dblist',
-            sourceDBInfo,
-            countYN='Y'
-        )
-        if resultSet == 0:
-            # RAC DB 라면 기존에 다른 노드가 등록되어 있는지 확인한다.
-            # 있다면, 해당 DB 들을 _id 로 서로 연결한다.
-            if sourceDBInfo["DATABASE_TYPE"] == 'RAC':
-                sourceDBInfo["CLUSTER_NODES"] = []
-                for nodeinfo in otherDBInfo:
-                    relatedNodeList = dbConn.getData('dblist',nodeinfo,"_id")
-                    if relatedNodeList is not None:
-                        sourceDBInfo["CLUSTER_NODES"].append(relatedNodeList["_id"])
-                resultSet = dbConn.addData('dblist',sourceDBInfo)
-                #기존 데이터베이스에도 신규 노드의 정보를 업데이트 한다.
-                for oldOne in sourceDBInfo["CLUSTER_NODES"]:
-                    searchCondition = {"_id" : oldOne}
-                    updateValue = { "CLUSTER_NODES" : resultSet.inserted_id }
-                    oldDbUpdate = dbConn.updateData('dblist',searchCondition, updateValue,'PUSH')
-                    return resultSet.inserted_id
-            else:
-                # RAC DB가 아닐경우 그냥 추가
-                resultSet = dbConn.addData('dblist', sourceDBInfo)
-                return resultSet.inserted_id
-        else:
-            resultSet = dbConn.getData('dblist', sourceDBInfo)
-            return resultSet["_id"]
 
     def addAnalyzeData(self, analyzedData):
         checkCondition = dict()
@@ -371,3 +350,25 @@ class DataController:
         dailyCheckData["ALERT"]          = alertAnalyze()
 
         return dailyCheckData
+
+    def makeDbList(self, data):
+        dbConn = DataModel.DataModel('monitoring_db')
+        accept_db_list = dict()
+        except_db_id = list()
+        index = 1
+        for x in data:
+            targetDb = dbConn.getData('dblist',{ 'DBUNQNAME' : x["DBUNQNAME"], 'HOSTNAME' : x["HOSTNAME"]})
+            # 제외 리스트에 해당 _id 가 있는지 판단하고 있다면 그냥 패스
+            if targetDb["_id"] in except_db_id:
+                pass
+            else:
+                # 제외 리스트에 해당 _id 가 없고 Cluster Nodes 가 있다면 RAC 라 연관노드 정보 획득.
+                if 'CLUSTER_NODES' in targetDb:
+                    except_db_id.extend(targetDb["CLUSTER_NODES"])
+                accept_db_list[index] = {
+                    "DBUNQNAME" : x["DBUNQNAME"],
+                    "HOSTNAME"  : x["HOSTNAME"]
+                }
+                index = index + 1
+
+        return accept_db_list

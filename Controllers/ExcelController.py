@@ -25,6 +25,7 @@ class ExcelController():
         else:
             self.workBook = Workbook()
         # 시트 생성
+        title = self.dataSource["DATABASE_INFO"]["DBUNQNAME"]+"_"+self.dataSource["INSTANCE_INFO"][1]["HOSTNAME"]
         self.workSheet = self.workBook.create_sheet(self.dataSource["DATABASE_INFO"]["DBUNQNAME"])
         self.workBook.active
         self.workSheet.title = self.dataSource["DATABASE_INFO"]["DBUNQNAME"]
