@@ -19,7 +19,7 @@ class DataController:
                                    "INSTANCE_NAME" : self.rawData["DBINFO"]["INSTANCE_NAME"],
                                    "HOSTNAME"  : self.rawData["DBINFO"]["HOSTNAME"],
                                    "INSTANCE_NUMBER" : self.rawData["DBINFO"]["INSTANCE_NUMBER"]
-                                 }, countYN='N', mDocs='N')
+                                 }, { "_id" : True}, countYN='N', mDocs='N')
         return resultSet
 
     def getDiagData(self, dbUniqName, hostname):
@@ -29,7 +29,7 @@ class DataController:
             datetime.date.today().month,
             datetime.date.today().day
         )
-        # 임시로 날짜 특정. 이후에 삭제. 위 커멘트는 해제
+
         diagData = dict()
         nodeInfoSource = dict()
 
@@ -200,6 +200,7 @@ class DataController:
             "DBID"      : analyzedData["DBID"],
             "DIAGDATE" : analyzedData["DIAGDATE"]
         }
+
         resultSet = dbConn.replaceData('dailyCheck',checkCondition, analyzedData, True)
         return resultSet
 
@@ -372,3 +373,34 @@ class DataController:
                 index = index + 1
 
         return accept_db_list
+
+    ## For Text Report
+    def textReport(self, dblist, type):
+        dbConn = DataModel.DataModel('monitoring_db')
+        # dbList Parsing
+        returnData = dict()
+        for db in dblist.keys():
+            dbId = dbConn.getData(
+                        'dblist',
+                        { "DBUNQNAME" : dblist[db]["DBUNQNAME"],
+                          "HOSTNAME"  : dblist[db]["HOSTNAME"]},
+                        { "_id" : True},
+            )
+            if type == 'TS':
+                statData = dbConn.getData(
+                            'dailyCheck',
+                            { "DBID" : dbId["_id"] },
+                            { "TABLESPACESTAT" : True },
+                            [("DIAGDATE", -1)]
+                )
+                totalMB = 0
+                usedMB = 0
+                for key in statData["TABLESPACESTAT"].keys():
+                    totalMB = totalMB + statData["TABLESPACESTAT"][key]["TOTAL"]
+                    usedMB = usedMB + statData["TABLESPACESTAT"][key]["USED"]
+                returnData[dblist[db]["DBUNQNAME"]+"_"+dblist[db]["HOSTNAME"]] = {
+                    "TOTAL" : round(totalMB/1024,2),
+                    "USEDGB" : round(usedMB/1024,2),
+                    "USEDPCT" : round(usedMB/totalMB*100,2)
+                }
+        return returnData

@@ -7,7 +7,7 @@ if __name__ == "__main__":
     group_main.add_argument('-l', help='Show Database List', metavar='<dbUniqueName> or All')
     group_main.add_argument('-a', nargs='*', help='add Diaglog file.', metavar='logfilename')
     group_main.add_argument('-e', help='make Excel file. Output filename will be \'DailyCheck_<date>.xlsx\'.', metavar='dbunqname or all')
-    # group_main.add_argument('-r', help='Report Diag Stats',choices=['ts','pga'])
+    group_main.add_argument('-r', help='Report Diag Stats',choices=['ts','pga'])
     args=parser_main.parse_args()
 
 if args.a :
@@ -59,9 +59,8 @@ if args.l :
                   '%-12s'%dbName['VERSION'],
                   '%-14s'%dbName['INSTANCE_NAME'],
                   '%-12s'%dbName['HOSTNAME'])
-#
-# if args.r :
-#     print("argument is : ",args.r)
-#     if args.r == 'ts':
-#         App = MC.MainController()
-#         resultSet = App.reportTablesapceUsage(args.r)
+
+if args.r :
+    if args.r == 'ts':
+        App = MC.MainController()
+        resultSet = App.textReportTablesapceUsage(args.r)

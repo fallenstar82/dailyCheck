@@ -11,6 +11,7 @@ class DataModel:
         collectionName ,
         condition = {},
         returnColumn = None,
+        sort={},
         countYN='N',
         mDocs='N'
     ):
@@ -23,9 +24,9 @@ class DataModel:
         else:
             if mDocs == 'N':
                 if returnColumn == None:
-                    result = Collection.find_one(condition)
+                    result = Collection.find_one(condition, sort=sort)
                 else:
-                    result = Collection.find_one(condition,returnColumn)
+                    result = Collection.find_one(condition,returnColumn,sort=sort)
             else:
                 if returnColumn == None:
                     result = Collection.find(condition)
