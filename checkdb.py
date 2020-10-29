@@ -8,7 +8,22 @@ if __name__ == "__main__":
     group_main.add_argument('-a', nargs='*', help='add Diaglog file.', metavar='logfilename')
     group_main.add_argument('-e', help='make Excel file. Output filename will be \'DailyCheck_<date>.xlsx\'.', metavar='dbunqname or all')
     group_main.add_argument('-r', help='Report Diag Stats',choices=['ts','pga'])
+    group_main.add_argument('-t', help='Rpoert Tablespace Trend',action='store_true')
+
+    group_trend = parser_main.add_argument_group('-t options :')
+    group_trend.add_argument('-d', help='Database name. It is Required', metavar='')
+    group_trend.add_argument('-o', help='Hostname. It is Required', metavar='')
+
     args=parser_main.parse_args()
+
+
+if args.t :
+    if args.d == None or args.o == None:
+        print("-t Argument need -d and -o options")
+        quit()
+    else:
+        App = MC.MainController()
+        App.trendView(args.d, args.o)
 
 if args.a :
     App = MC.MainController()

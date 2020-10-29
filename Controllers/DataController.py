@@ -239,7 +239,7 @@ class DataController:
                 sgaOperData["0"] = self.rawData["SGAOPER"]
             else:
                 for compKey in self.rawData["SGAOPER"].keys():
-                    sgaOperData[compKey] = self.rawData["SGAOPER"][compKeys]
+                    sgaOperData[compKey] = self.rawData["SGAOPER"][compKey]
             return sgaOperData
 
         def dataguardAnalyze():

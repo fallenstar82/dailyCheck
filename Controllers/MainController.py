@@ -1,4 +1,5 @@
 import Controllers.DataController as DC
+import Controllers.TrendController as TC
 class MainController():
     def __init__(self):
         self.App = DC.DataController()
@@ -33,3 +34,27 @@ class MainController():
         print("----------------------------------------------------------")
         for x in reportData.keys():
             print("%-25s"%x,"%10s"%reportData[x]["USEDGB"],"%10s"%reportData[x]["TOTAL"],"%10s"%reportData[x]["USEDPCT"])
+
+    def trendView(self, dbName, hostName):
+        App = TC.TrendController()
+        trendInfo = App.getTrend(dbName, hostName)
+        print(
+            "%-25s"%"TABELSPACE NAME",
+            "%13s"%"TOTAL",
+            "%13s"%"BEGIN SIZE",
+            "%13s"%"END SIZE",
+            "%13s"%"TREND",
+            "%13s"%"EXHAUST"
+            )
+        print("-----------------------------------------------------------------------------------------------")
+        for data in trendInfo.keys():
+            if trendInfo[data]["EXHAUST"] > 0.0:
+                print("%-25s"%data,
+                      "%13s"%trendInfo[data]["TOTAL"],
+                      "%13s"%trendInfo[data]["MIN"],
+                      "%13s"%trendInfo[data]["MAX"],
+                      "%13s"%trendInfo[data]["TREND"],
+                      "%13s"%trendInfo[data]["EXHAUST"]
+                      )
+            else:
+                continue
