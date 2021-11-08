@@ -24,6 +24,7 @@ class DataController:
 
     def getDiagData(self, dbUniqName, hostname):
         import datetime
+        
         today = datetime.datetime(
             datetime.date.today().year,
             datetime.date.today().month,
@@ -142,7 +143,7 @@ class DataController:
                     if 'DELAY' in diagRawData[instIdx]["DATAGUARD"][index]:
                         diagData["DATAGUARD"][instIdx][index]["DELAY"] = diagRawData[instIdx]["DATAGUARD"][index]["DELAY"]
 
-            if '0' in diagRawData[instIdx]["ALERT"]:
+            if diagRawData[instIdx]["ALERT"]["0"] == "NoData":
                 pass
             else:
                 diagData["ALERT"][instIdx] = diagRawData[instIdx]["ALERT"]

@@ -16,12 +16,14 @@
 
 * RAC 통합.
 * MongoDB를 이용한 데이터 저장
+* Alert log 관련 문제 해결
 
 
 
 ## Dependancy
 
 * openpyxl
+* Mongodb
 
 ### Files
 

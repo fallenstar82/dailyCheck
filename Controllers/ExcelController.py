@@ -216,22 +216,23 @@ class ExcelController():
                     xPosition = 3
         elif dataType == "DATASET WITH LIST SUBSET":
             yPosition = position + 1
-            xPosition = 3
-            for firstKey in data.keys():
+            for firstKey in data.keys():   # 0,1 -- Instance Number
+                xPosition = 3
                 cell = self.workSheet.cell(row=yPosition, column=xPosition)
                 cell.value = firstKey
                 cell.font = Font(name = 'Calibri', size = 10)
                 xPosition = xPosition + 1
-                for index in range(0,len(data[firstKey])):
-                    for secondKey in data[firstKey][index].keys():
-                        cell = self.workSheet.cell(row=yPosition, column=xPosition)
-                        cell.value = secondKey
-                        cell.font = Font(name = 'Calibri', size = 10)
-                        xPosition = xPosition + 1
+                for index in data[firstKey].keys(): # 로그 순서 키 '0','1'...
+                    for secondKey in data[firstKey][index].keys(): 
                         cell = self.workSheet.cell(row=yPosition, column=xPosition)
                         cell.value = data[firstKey][index][secondKey]
                         cell.font = Font(name = 'Calibri', size = 10)
-                        yPosition = yPosition + 1
-                        xPosition = 3
-
+                        xPosition = xPosition + 1
+                        # cell = self.workSheet.cell(row=yPosition, column=xPosition)
+                        # cell.value = data[firstKey][index][secondKey]
+                        # cell.font = Font(name = 'Calibri', size = 10)
+                        # yPosition = yPosition + 1
+                        # xPosition = 3
+                    yPosition = yPosition + 1
+                    xPosition = 4
         return yPosition
