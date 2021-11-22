@@ -1,5 +1,7 @@
+from os import terminal_size
 import Controllers.DataController as DC
 import Controllers.TrendController as TC
+
 class MainController():
     def __init__(self):
         self.App = DC.DataController()
@@ -58,3 +60,56 @@ class MainController():
                       )
             else:
                 continue
+
+    def runConsole(self):
+        import Controllers.ConsoleController as CC
+        import types
+        import time
+        from Modules.Utilities import getTermSize
+        from Modules.Utilities import clearScreen
+        from Modules.Utilities import checkTermSize
+        
+        currentPage = 'SELECT DB' #DB Select
+
+        App=CC.ConsoleController()
+
+        # Check Terminal Size
+        checkTermSize()
+
+        # Get Database List
+        dbList = App.setDatabaseList()
+        selectRange = len(dbList)
+        selectedDatabase = dict()
+        while True:
+            checkTermSize()
+            clearScreen()
+            App.drawTop(
+                    getTermSize().columns,
+                    currentPage,
+                    'No Database Selected' if currentPage == 'SELECT DB' else selectedDatabase['INSTANCE_NAME']+'-'+selectedDatabase['HOSTNAME']
+                )
+            if currentPage == 'SELECT DB':
+                App.showDBList(dbList)
+                print(selectRange)
+                # 'q' 가 들어오면 끝낸다.
+                # 'q' 이외의 알파뱃의 경우 처음으로 돌린다.(exception)
+                try:
+                    val = input("Choose Database (q to exit) : ")
+                    if val == 'q':
+                        exit()
+                    val=int(val)
+                    if val < 0 or val > selectRange:
+                        pass
+                    else:
+                        selectedDatabase = dbList[val]
+                        currentPage = 'MAIN_CATEGORY'
+                except Exception as e:
+                    pass
+            else:
+                try:
+                    currentPage = App.getMenu(currentPage)
+                except Exception as e:
+                    App.runAction(currentPage)
+
+                    
+
